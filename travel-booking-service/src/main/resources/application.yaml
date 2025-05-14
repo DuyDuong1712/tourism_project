@@ -1,0 +1,25 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /travel
+
+
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/tour_management"
+    username: root
+    password: Chiduy171203
+  jpa:
+    hibernate:
+      ddl-auto: none
+      dialect: org.hibernate.dialect.MySQL5Dialect
+      enable_lazy_load_no_trans: true
+      format_sql: true
+    show-sql: true
+  jackson:
+    default-property-inclusion: non_null
+    time-zone: Asia/Ho_Chi_Minh
+    date-format: yyyy-MM-dd HH:mm:ss
+
+jwt:
+  signerKey: "eDvTlohzG6dHiJU9GdHzVGBq3T9b/UaLG9yqif0EuejdhEFOCuV4YHBIQjSNLG5Z"
