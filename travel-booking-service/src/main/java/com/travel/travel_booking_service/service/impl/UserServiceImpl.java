@@ -1,15 +1,16 @@
 package com.travel.travel_booking_service.service.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.travel.travel_booking_service.dto.request.UserCreationRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.UserRequest;
-import com.travel.travel_booking_service.dto.request.UserUpdateRequest;
-import com.travel.travel_booking_service.dto.response.RoleResponse;
+import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
 import com.travel.travel_booking_service.dto.response.UserResponse;
 import com.travel.travel_booking_service.entity.Role;
 import com.travel.travel_booking_service.entity.User;
@@ -20,6 +21,7 @@ import com.travel.travel_booking_service.mapper.RoleMapper;
 import com.travel.travel_booking_service.mapper.UserMapper;
 import com.travel.travel_booking_service.repository.RoleRepository;
 import com.travel.travel_booking_service.repository.UserRepository;
+import com.travel.travel_booking_service.service.UploadImageFile;
 import com.travel.travel_booking_service.service.UserService;
 
 import lombok.AccessLevel;
@@ -35,26 +37,51 @@ public class UserServiceImpl implements UserService {
     RoleRepository roleRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    UploadImageFile uploadImageFile;
+
     private final RoleMapper roleMapper;
 
     @Override
-    public UserResponse createUser(UserCreationRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())
-                || userRepository.existsByEmail(request.getEmail())) {
+    public UserResponse createUser(
+            String username,
+            String password,
+            String fullName,
+            String email,
+            String phone,
+            Long roleId,
+            MultipartFile imageFile) {
+        if (userRepository.existsByUsername(username) || userRepository.existsByEmail(email)) {
             throw new AppException(ErrorCode.USER_EXISTS);
         }
 
-        User user = userMapper.toUser(request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        User user = User.builder()
+                .username(username)
+                .fullname(fullName)
+                .email(email)
+                .phone(phone)
+                .build();
 
-        Role role = roleRepository
-                .findByCode(request.getRole())
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        user.setPassword(passwordEncoder.encode(password));
 
-        user.setRole(role);
+        Role roleEntity = roleRepository.findById(roleId).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        UserResponse userResponse = userMapper.toUserResponse(userRepository.save(user));
-        userResponse.setRole(roleMapper.toRoleResponse(role));
+        user.setRole(roleEntity);
+
+        // Handle image upload
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse cloudinaryUploadResponse = uploadImageFile.upLoadImage(imageFile);
+                user.setProfileImg(cloudinaryUploadResponse.getUrl());
+
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            }
+        }
+
+        userRepository.save(user);
+
+        UserResponse userResponse = userMapper.toUserResponse(user);
+        userResponse.setRole(roleEntity.getCode());
 
         return userResponse;
     }
@@ -87,7 +114,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(role);
 
         UserResponse userResponse = userMapper.toUserResponse(userRepository.save(user));
-        userResponse.setRole(roleMapper.toRoleResponse(role));
+        userResponse.setRole(role.getCode());
 
         return userResponse;
     }
@@ -95,33 +122,71 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
-
         List<UserResponse> userResponses = new ArrayList<>();
         for (User user : users) {
-            Role role = user.getRole();
-            RoleResponse roleResponse = roleMapper.toRoleResponse(role);
             UserResponse userResponse = userMapper.toUserResponse(user);
-            userResponse.setRole(roleResponse);
+            userResponse.setRole(user.getRole().getCode());
             userResponses.add(userResponse);
         }
+
         return userResponses;
     }
 
     @Override
-    public UserResponse updateUser(Long id, UserUpdateRequest request) {
+    public UserResponse updateUser(
+            Long id,
+            String username,
+            String password,
+            String fullName,
+            String email,
+            String phone,
+            Long roleid,
+            MultipartFile imageFile) {
         User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        userMapper.updateUser(user, request);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        Role role = roleRepository.findById(roleid).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        Role role = roleRepository
-                .findByCode(request.getRole())
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        user.setUsername(username);
+        user.setFullname(fullName);
+        user.setEmail(email);
+        user.setPhone(phone);
         user.setRole(role);
 
+        if (password != null && !password.trim().equals("")) {
+            user.setPassword(passwordEncoder.encode(password));
+        }
+
+        // Xử lý upload ảnh nếu có
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse uploaded = uploadImageFile.upLoadImage(imageFile);
+                user.setProfileImg(uploaded.getUrl());
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            }
+        }
+
         UserResponse userResponse = userMapper.toUserResponse(userRepository.save(user));
-        userResponse.setRole(roleMapper.toRoleResponse(role));
+        userResponse.setRole(role.getCode());
         return userResponse;
+    }
+
+    @Override
+    public UserResponse changeStatus(Long id, StatusRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getRole().getCode().equalsIgnoreCase(RoleEnum.ADMIN.name())) {
+            throw new AppException(ErrorCode.UNKNOWN_ERROR);
+        }
+
+        user.setInActive(request.getInActive());
+
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponse updateUserRole(Long id, String role) {
+        return null;
     }
 
     @Override
@@ -130,7 +195,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(Long id) {}
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getRole().getCode().equalsIgnoreCase(RoleEnum.ADMIN.name())) {
+            throw new AppException(ErrorCode.UNKNOWN_ERROR);
+        }
+        userRepository.delete(user);
+    }
 
     @Override
     public List<UserResponse> searchUsers(String keyword) {

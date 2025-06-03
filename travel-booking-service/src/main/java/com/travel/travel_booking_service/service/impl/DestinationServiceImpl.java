@@ -2,14 +2,12 @@ package com.travel.travel_booking_service.service.impl;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.travel.travel_booking_service.dto.request.DestinationRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
 import com.travel.travel_booking_service.dto.response.DestinationResponse;
@@ -37,7 +35,8 @@ public class DestinationServiceImpl implements DestinationService {
 
     // ---ADMIN---
     @Override
-    public DestinationResponse createDestination(String name, String code, String description, Long parentId, MultipartFile imageFile) {
+    public DestinationResponse createDestination(
+            String name, String code, String description, Long parentId, MultipartFile imageFile) {
         if (parentId != null && !destinationRepository.existsById(parentId)) {
             throw new AppException(ErrorCode.DESTINATION_NOT_FOUND);
         }
@@ -56,7 +55,6 @@ public class DestinationServiceImpl implements DestinationService {
         if (destinationRepository.existsByCodeIgnoreCase(code.trim())) {
             throw new AppException(ErrorCode.DESTINATION_CODE_EXISTS);
         }
-
 
         // Create destination entity
         Destination destination = Destination.builder()
@@ -82,7 +80,8 @@ public class DestinationServiceImpl implements DestinationService {
     }
 
     @Override
-    public DestinationResponse updateDestination(Long id, String name, String code, String description, Long parentId, MultipartFile imageFile) {
+    public DestinationResponse updateDestination(
+            Long id, String name, String code, String description, Long parentId, MultipartFile imageFile) {
         if (parentId != null && !destinationRepository.existsById(parentId)) {
             throw new AppException(ErrorCode.DESTINATION_NOT_FOUND);
         }
@@ -174,13 +173,17 @@ public class DestinationServiceImpl implements DestinationService {
     @Override
     public List<DestinationResponse> getParentDestinations() {
         List<Destination> destinations = destinationRepository.findParentDestinations();
-        return destinations.stream().map(destinationMapper::toDestinationResponse).collect(Collectors.toList());
+        return destinations.stream()
+                .map(destinationMapper::toDestinationResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<DestinationResponse> getChildrenByParentId(Long id) {
         List<Destination> destinations = destinationRepository.findByParentId(id);
-        return destinations.stream().map(destinationMapper::toDestinationResponse).collect(Collectors.toList());
+        return destinations.stream()
+                .map(destinationMapper::toDestinationResponse)
+                .collect(Collectors.toList());
     }
 
     @Override

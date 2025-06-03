@@ -92,7 +92,8 @@ public enum ErrorCode {
     DESTINATION_CODE_EXISTS(6010, "Mã địa điểm đã tồn tại", HttpStatus.CONFLICT),
     DESTINATION_HAS_CHILDREN(
             6010, "Địa điểm này đang có các địa điểm con, vui lòng xóa các địa điểm con trước", HttpStatus.BAD_REQUEST),
-    INVALID_PARENT_DESTINATION(6011, "Địa điểm cha không hợp lệ. Không thể gán địa điểm cha này.", HttpStatus.BAD_REQUEST),
+    INVALID_PARENT_DESTINATION(
+            6011, "Địa điểm cha không hợp lệ. Không thể gán địa điểm cha này.", HttpStatus.BAD_REQUEST),
 
     // Mã lỗi liên quan đến departure
     DEPARTURE_NOT_FOUND(6000, "Không tìm thấy điểm khởi hành", HttpStatus.NOT_FOUND),

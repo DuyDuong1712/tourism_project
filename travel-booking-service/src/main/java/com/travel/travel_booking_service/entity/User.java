@@ -1,6 +1,5 @@
 package com.travel.travel_booking_service.entity;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,23 +36,11 @@ public class User extends BaseEntity {
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "address")
-    private String address;
-
-    @Column(name = "date_of_birth")
-    private LocalDate dateOfBirth;
-
-    @Column(name = "gender", length = 50)
-    private String gender;
-
     @Column(name = "profile_img")
     private String profileImg;
 
     @Column(name = "in_active", columnDefinition = "TINYINT DEFAULT 1")
     private Boolean inActive;
-
-    @Column(name = "email_verified", columnDefinition = "TINYINT DEFAULT 0")
-    private Boolean emailVerified;
 
     @OneToMany(
             mappedBy = "customer",

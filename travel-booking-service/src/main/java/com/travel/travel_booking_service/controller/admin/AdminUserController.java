@@ -2,14 +2,13 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
-
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.travel.travel_booking_service.dto.request.UserCreationRequest;
-import com.travel.travel_booking_service.dto.request.UserUpdateRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.UserResponse;
 import com.travel.travel_booking_service.service.UserService;
@@ -26,11 +25,18 @@ public class AdminUserController {
 
     UserService userService;
 
-    @PostMapping("")
-    public ResponseEntity<ApiResponse<UserResponse>> createUser(@RequestBody UserCreationRequest request) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+            @RequestParam("username") String username,
+            @RequestParam("password") String password,
+            @RequestParam("fullName") String fullName,
+            @RequestParam("email") String email,
+            @RequestParam("phone") String phone,
+            @RequestParam("roleId") Long roleid,
+            @RequestParam(value = "image", required = false) MultipartFile imageFile) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<UserResponse>builder()
-                        .data(userService.createUser(request))
+                        .data(userService.createUser(username, password, fullName, email, phone, roleid, imageFile))
                         .build());
     }
 
@@ -41,53 +47,37 @@ public class AdminUserController {
                         .data(userService.getAllUsers())
                         .build());
     }
-    //
-    //    @GetMapping("/{id}")
-    //    public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable Long id) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(
-    //                ApiResponse.<UserResponse>builder()
-    //                        .data(userService.getUserById(id))
-    //                        .build()
-    //        );
-    //    }
-    //
-    @PatchMapping("/{id}")
+
+    @PatchMapping(
+            value = {"/{id}"},
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
-            @PathVariable Long id, @RequestBody @Valid UserUpdateRequest request) {
+            @PathVariable Long id,
+            @RequestParam("username") String username,
+            @RequestParam(value = "password", required = false) String password,
+            @RequestParam("fullName") String fullName,
+            @RequestParam("email") String email,
+            @RequestParam("phone") String phone,
+            @RequestParam("roleId") Long roleid,
+            @RequestParam(value = "image", required = false) MultipartFile imageFile) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<UserResponse>builder()
-                        .data(userService.updateUser(id, request))
+                        .data(userService.updateUser(id, username, password, fullName, email, phone, roleid, imageFile))
                         .build());
     }
-    //
-    //    @DeleteMapping("/{id}")
-    //    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-    //        userService.deleteUser(id);
-    //        return ResponseEntity.noContent().build();
-    //    }
-    //
-    //    @GetMapping("/search")
-    //    public ResponseEntity<ApiResponse<List<UserResponse>>> searchUsers(@RequestParam String keyword) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(
-    //                ApiResponse.<List<UserResponse>>builder()
-    //                        .data(userService.searchUsers(keyword))
-    //                        .build()
-    //        );
-    //    }
-    //
-    //    @PutMapping("/{id}/status")
-    //    public ResponseEntity<ApiResponse<UserResponse>> updateUserStatus(@PathVariable Long id,
-    //            @RequestParam boolean active) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<UserResponse>builder()
-    //                .data(userService.updateUserStatus(id, active))
-    //                .build());
-    //    }
-    //
-    //    @PutMapping("/{id}/role")
-    //    public ResponseEntity<ApiResponse<UserResponse>> updateUserRole(@PathVariable Long id,
-    //            @RequestParam Long roleId) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.<UserResponse>builder()
-    //                .data(userService.updateUserRole(id, roleId))
-    //                .build());
-    //    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<UserResponse>> changeDestinationStatus(
+            @PathVariable Long id, @RequestBody StatusRequest statusRequest) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<UserResponse>builder()
+                        .data(userService.changeStatus(id, statusRequest))
+                        .build());
+    }
 }

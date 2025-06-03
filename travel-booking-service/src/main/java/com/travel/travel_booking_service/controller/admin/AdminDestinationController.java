@@ -8,7 +8,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.travel.travel_booking_service.dto.request.DestinationRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.DestinationResponse;

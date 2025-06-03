@@ -55,7 +55,6 @@ public class RoleController {
                         .build());
     }
 
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getAllRoles() {
         return ResponseEntity.status(HttpStatus.OK)
@@ -63,6 +62,4 @@ public class RoleController {
                         .data(roleService.getAllRoles())
                         .build());
     }
-
 }
-

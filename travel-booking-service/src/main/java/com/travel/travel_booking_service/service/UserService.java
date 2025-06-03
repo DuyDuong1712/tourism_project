@@ -2,21 +2,41 @@ package com.travel.travel_booking_service.service;
 
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.request.UserCreationRequest;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.UserRequest;
-import com.travel.travel_booking_service.dto.request.UserUpdateRequest;
 import com.travel.travel_booking_service.dto.response.UserResponse;
 
 public interface UserService {
-    UserResponse createUser(UserCreationRequest request);
+    UserResponse createUser(
+            String username,
+            String password,
+            String fullName,
+            String email,
+            String phone,
+            Long roleId,
+            MultipartFile imageFile);
 
     List<UserResponse> getAllUsers();
 
     UserResponse getUserById(Long id);
 
-    UserResponse updateUser(Long id, UserUpdateRequest request);
+    UserResponse updateUser(
+            Long id,
+            String username,
+            String password,
+            String fullName,
+            String email,
+            String phone,
+            Long roleid,
+            MultipartFile imageFile);
 
     void deleteUser(Long id);
+
+    UserResponse changeStatus(Long id, StatusRequest request);
+
+    UserResponse updateUserRole(Long id, String role);
 
     List<UserResponse> searchUsers(String keyword);
 

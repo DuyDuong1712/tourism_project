@@ -2,8 +2,6 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.request.StatusRequest;
-import com.travel.travel_booking_service.dto.response.DestinationResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -12,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.travel.travel_booking_service.dto.request.PermissionIdsRequest;
 import com.travel.travel_booking_service.dto.request.RoleRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.RoleResponse;
 import com.travel.travel_booking_service.service.RoleService;
@@ -74,7 +73,6 @@ public class AdminRoleController {
                         .data(roleService.getRoleById(id))
                         .build());
     }
-
 
     @PutMapping("/{roleId}/permissions")
     public ResponseEntity<ApiResponse<RoleResponse>> addPermissionsToRole(
