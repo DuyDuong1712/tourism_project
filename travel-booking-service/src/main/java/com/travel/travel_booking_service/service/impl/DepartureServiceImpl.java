@@ -31,9 +31,12 @@ public class DepartureServiceImpl implements DepartureService {
 
     @Override
     public DepartureResponse createDeparture(DepartureRequest departureRequest) {
-        if (departureRepository.existsByNameIgnoreCase(departureRequest.getName())
-                || departureRepository.existsByCodeIgnoreCase(departureRequest.getName())) {
+        if (departureRepository.existsByNameIgnoreCase(departureRequest.getName())) {
             throw new AppException(ErrorCode.DEPARTURE_EXISTS);
+        }
+
+        if (departureRepository.existsByCodeIgnoreCase(departureRequest.getCode())) {
+            throw new AppException(ErrorCode.DEPARTURE_CODE_EXISTS);
         }
 
         Departure departure = departureMapper.toDepartureEntity(departureRequest);

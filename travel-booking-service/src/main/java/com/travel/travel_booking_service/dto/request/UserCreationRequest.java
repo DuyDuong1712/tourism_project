@@ -35,11 +35,6 @@ public class UserCreationRequest {
     @Email(message = "EMAIL_INVALID")
     private String email;
 
-    private String address;
-
-    @DobContraint(min = 18, message = "INVALID_DOB")
-    private LocalDate dateOfBirth;
-
     private String gender;
 
     private String profileImg;

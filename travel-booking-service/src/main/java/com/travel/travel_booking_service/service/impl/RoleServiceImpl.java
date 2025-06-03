@@ -2,6 +2,8 @@ package com.travel.travel_booking_service.service.impl;
 
 import java.util.*;
 
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.entity.Transport;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ import lombok.experimental.FieldDefaults;
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RoleServiceImpl implements RoleService {
+
     RoleRepository roleRepository;
     PermissionRepository permissionRepository;
     RolePermissionRepository rolePermissionRepository;
@@ -87,8 +90,6 @@ public class RoleServiceImpl implements RoleService {
     public void deactivateRole(Long id) {
         Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        validateRole(role);
-
         if (role.getRolePermissions() != null && !role.getRolePermissions().isEmpty()) {
             throw new AppException(ErrorCode.ROLE_IN_USE);
         }
@@ -101,22 +102,16 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public void deleteSoftRole(Long id) {
         Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-
-        validateRole(role);
-
-        if (role.getRolePermissions() != null && !role.getRolePermissions().isEmpty()) {
-            throw new AppException(ErrorCode.ROLE_IN_USE);
+        if(role.getCode().equalsIgnoreCase("ADMIN")) {
+            throw new AppException(ErrorCode.ROLE_ADMIN_CAN_NOT_DELETE);
         }
-
-        role.setInActive(false);
-        roleRepository.save(role);
+        roleRepository.delete(role);
     }
 
     @Override
     public RoleResponse getRoleById(Long id) {
         Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        validateRole(role);
         RoleResponse roleResponse = roleMapper.toRoleResponse(role);
 
         List<PermissionResponse> permissionResponses = new ArrayList<>();
@@ -133,6 +128,10 @@ public class RoleServiceImpl implements RoleService {
     public RoleResponse addRolePermissions(Long roleId, PermissionIdsRequest request) {
         // Tìm role
         Role role = roleRepository.findById(roleId).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        if(role.getCode().equals("ADMIN")) {
+            throw new AppException(ErrorCode.ROLE_ADMIN_PERMISSION_CAN_NOT_CHANGE);
+        }
 
         // Tìm danh sách permission
         List<Permission> permissions = permissionRepository.findAllById(request.getPermissionIds());
@@ -219,32 +218,11 @@ public class RoleServiceImpl implements RoleService {
         return roleResponse;
     }
 
-    @Override
-    public RoleResponse getRoleByName(String name) {
-        return null;
-    }
-
-    @Override
-    public RoleResponse getRoleByCode(String code) {
-        return null;
-    }
-
-    @Override
-    public RoleResponse getPermissionsByRoleId(Long roleId) {
-        return null;
-    }
-
-    @Override
-    public List<RoleResponse> searchRoles(String keyword) {
-        return List.of();
-    }
 
     @Override
     @Transactional
     public RoleResponse updateRole(Long id, RoleRequest request) {
         Role role = roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
-
-        validateRole(role);
 
         String newCode = request.getCode().trim();
 
@@ -292,9 +270,16 @@ public class RoleServiceImpl implements RoleService {
         return roleResponse;
     }
 
-    public void validateRole(Role role) {
-        if (!role.getInActive()) {
-            throw new AppException(ErrorCode.ROLE_NOT_FOUND);
+    @Override
+    public RoleResponse changeRoleStatus(Long id, StatusRequest request) {
+        Role role =
+                roleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        if (role.getCode().equals("ADMIN")) {
+            throw new AppException(ErrorCode.ROLE_ADMIN_PERMISSION_CAN_NOT_CHANGE);
         }
+        role.setInActive(request.getInActive());
+
+        return roleMapper.toRoleResponse(roleRepository.save(role));
     }
+
 }

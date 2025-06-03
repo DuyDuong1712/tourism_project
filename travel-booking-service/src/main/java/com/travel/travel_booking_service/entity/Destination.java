@@ -17,6 +17,10 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Destination extends BaseEntity {
+
+    @Column(name = "parent_id")
+    private Long parentId;
+
     @Column(name = "name", nullable = false)
     private String name;
 
@@ -31,6 +35,16 @@ public class Destination extends BaseEntity {
 
     @Column(name = "in_active", columnDefinition = "TINYINT DEFAULT 1")
     private Boolean inActive;
+
+    // Quan hệ tự tham chiếu: Một Destination có thể có nhiều Destination con
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id", referencedColumnName = "id")
+    private List<Destination> children = new ArrayList<>();
+
+    // Quan hệ tự tham chiếu: Một Destination có một Destination cha
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id", insertable = false, updatable = false)
+    private Destination parent;
 
     @OneToMany(
             mappedBy = "destination",

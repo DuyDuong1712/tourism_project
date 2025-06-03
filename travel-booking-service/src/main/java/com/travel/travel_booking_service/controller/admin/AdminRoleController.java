@@ -2,6 +2,8 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.dto.response.DestinationResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -73,13 +75,6 @@ public class AdminRoleController {
                         .build());
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<RoleResponse>>> searchRoles(@RequestParam String keyword) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<List<RoleResponse>>builder()
-                        .data(roleService.searchRoles(keyword))
-                        .build());
-    }
 
     @PutMapping("/{roleId}/permissions")
     public ResponseEntity<ApiResponse<RoleResponse>> addPermissionsToRole(
@@ -99,21 +94,12 @@ public class AdminRoleController {
                         .build());
     }
 
-    //    @PutMapping("/{id}/permissions")
-    //    public ResponseEntity<ApiResponse<RoleResponse>> updateRolePermissions(
-    //            @PathVariable Long id, @RequestBody List<Long> permissionIds) {
-    //        return ResponseEntity.status(HttpStatus.OK)
-    //                .body(ApiResponse.<RoleResponse>builder()
-    //                        .data(roleService.updateRolePermissions(id, permissionIds))
-    //                        .build());
-    //    }
-
-    //    @GetMapping("/{id}/permissions")
-    //    public ResponseEntity<ApiResponse<List<Long>>> getRolePermissions(@PathVariable Long id) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(
-    //                ApiResponse.<List<Long>>builder()
-    //                        .data(roleService.getPermissionsByRoleId(id))
-    //                        .build()
-    //        );
-    //    }
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<RoleResponse>> changeDestinationStatus(
+            @PathVariable Long id, @RequestBody StatusRequest statusRequest) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<RoleResponse>builder()
+                        .data(roleService.changeRoleStatus(id, statusRequest))
+                        .build());
+    }
 }

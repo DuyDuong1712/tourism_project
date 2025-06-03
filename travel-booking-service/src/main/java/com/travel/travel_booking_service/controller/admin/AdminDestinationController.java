@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.travel.travel_booking_service.dto.request.DestinationRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.DestinationResponse;
@@ -31,10 +32,11 @@ public class AdminDestinationController {
             @RequestParam("name") String name,
             @RequestParam("code") String code,
             @RequestParam("description") String description,
+            @RequestParam(value = "parentId", required = false) Long parentId,
             @RequestParam(value = "image", required = false) MultipartFile imageFile) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<DestinationResponse>builder()
-                        .data(destinationService.createDestination(name, code, description, imageFile))
+                        .data(destinationService.createDestination(name, code, description, parentId, imageFile))
                         .build());
     }
 
@@ -48,14 +50,15 @@ public class AdminDestinationController {
 
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<DestinationResponse>> updateDestination(
-            @PathVariable("id") Long id,
+            @PathVariable Long id,
             @RequestParam("name") String name,
             @RequestParam("code") String code,
             @RequestParam("description") String description,
-            @RequestParam(value = "image", required = false) MultipartFile imageFile) {
+            @RequestParam(value = "parentId", required = false) Long parentId,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<DestinationResponse>builder()
-                        .data(destinationService.updateDestination(id, name, code, description, imageFile))
+                        .data(destinationService.updateDestination(id, name, code, description, parentId, imageFile))
                         .build());
     }
 
@@ -71,6 +74,22 @@ public class AdminDestinationController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<DestinationResponse>builder()
                         .data(destinationService.changeDestinationStatus(id, statusRequest))
+                        .build());
+    }
+
+    @GetMapping("/parent-list")
+    public ResponseEntity<ApiResponse<List<DestinationResponse>>> getParentDestinations() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<DestinationResponse>>builder()
+                        .data(destinationService.getParentDestinations())
+                        .build());
+    }
+
+    @GetMapping("/{id}/children")
+    public ResponseEntity<ApiResponse<List<DestinationResponse>>> getChildrenDestinations(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<DestinationResponse>>builder()
+                        .data(destinationService.getChildrenByParentId(id))
                         .build());
     }
 }

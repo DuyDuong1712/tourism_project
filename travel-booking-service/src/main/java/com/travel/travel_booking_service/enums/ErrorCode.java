@@ -90,10 +90,14 @@ public enum ErrorCode {
     INVALID_DESTINATION_NAME(6008, "Tên địa điểm không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_DESTINATION_CODE(6009, "Mã địa điểm không hợp lệ", HttpStatus.BAD_REQUEST),
     DESTINATION_CODE_EXISTS(6010, "Mã địa điểm đã tồn tại", HttpStatus.CONFLICT),
+    DESTINATION_HAS_CHILDREN(
+            6010, "Địa điểm này đang có các địa điểm con, vui lòng xóa các địa điểm con trước", HttpStatus.BAD_REQUEST),
+    INVALID_PARENT_DESTINATION(6011, "Địa điểm cha không hợp lệ. Không thể gán địa điểm cha này.", HttpStatus.BAD_REQUEST),
 
     // Mã lỗi liên quan đến departure
     DEPARTURE_NOT_FOUND(6000, "Không tìm thấy điểm khởi hành", HttpStatus.NOT_FOUND),
     DEPARTURE_EXISTS(6001, "Điểm khởi hành đã tồn tại", HttpStatus.CONFLICT),
+    DEPARTURE_CODE_EXISTS(6001, "Mã điểm khởi hành đã tồn tại", HttpStatus.CONFLICT),
     DEPARTURE_CREATION_FAILED(6002, "Tạo điểm khởi hành thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
     DEPARTURE_UPDATE_FAILED(6003, "Cập nhật điểm khởi hành thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
     DEPARTURE_DELETION_FAILED(6004, "Xóa điểm khởi hành thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -103,7 +107,6 @@ public enum ErrorCode {
     DEPARTURE_ADDRESS_REQUIRED(6007, "Mã điểm khởi hành không được để trống", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_NAME(6008, "Tên điểm khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_DEPARTURE_CODE(6009, "Mã điểm khởi hành không hợp lệ", HttpStatus.BAD_REQUEST),
-    DEPARTURE_CODE_EXISTS(6010, "Mã điểm khởi hành đã tồn tại", HttpStatus.CONFLICT),
 
     // Mã lỗi liên quan đến Transport
     TRANSPORT_NOT_FOUND(8000, "Không tìm thấy phương tiện", HttpStatus.NOT_FOUND),
@@ -144,6 +147,7 @@ public enum ErrorCode {
 
     // Mã lỗi liên quan đến Role
     ROLE_NOT_FOUND(9000, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
+    ROLE_ADMIN_CAN_NOT_DELETE(9000, "Không thể xóa admin", HttpStatus.NOT_FOUND),
     ROLE_EXISTS(9001, "Vai trò đã tồn tại", HttpStatus.CONFLICT),
     ROLE_CREATION_FAILED(9002, "Tạo vai trò thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
     ROLE_UPDATE_FAILED(9003, "Cập nhật vai trò thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -158,6 +162,7 @@ public enum ErrorCode {
 
     // Mã lỗi liên quan đến Permission
     PERMISSION_NOT_FOUND(9100, "Không tìm thấy quyền", HttpStatus.NOT_FOUND),
+    ROLE_ADMIN_PERMISSION_CAN_NOT_CHANGE(9100, "Quyền của admin không thể thay đổi", HttpStatus.NOT_FOUND),
     PERMISSION_EXISTS(9101, "Quyền đã tồn tại", HttpStatus.CONFLICT),
     PERMISSION_CREATION_FAILED(9102, "Tạo quyền thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
     PERMISSION_UPDATE_FAILED(9103, "Cập nhật quyền thất bại", HttpStatus.INTERNAL_SERVER_ERROR),

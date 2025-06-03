@@ -14,6 +14,8 @@ import lombok.NoArgsConstructor;
 public class DestinationResponse {
     private Long id;
 
+    private Long parentId;
+
     private String name;
 
     private String code;

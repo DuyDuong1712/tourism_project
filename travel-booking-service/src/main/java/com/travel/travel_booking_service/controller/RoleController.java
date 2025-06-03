@@ -55,13 +55,6 @@ public class RoleController {
                         .build());
     }
 
-    @GetMapping("/code")
-    public ResponseEntity<ApiResponse<RoleResponse>> getRoleByCode(@RequestParam String code) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<RoleResponse>builder()
-                        .data(roleService.getRoleByCode(code))
-                        .build());
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getAllRoles() {
@@ -71,41 +64,5 @@ public class RoleController {
                         .build());
     }
 
-    //    @PostMapping("/{roleId}/permissions/{permissionId}")
-    //    public ResponseEntity<ApiResponse<Void>> addPermissionToRole(
-    //            @PathVariable Long roleId,
-    //            @PathVariable Long permissionId) {
-    //        roleService.addPermissionToRole(roleId, permissionId);
-    //        return ResponseEntity.status(HttpStatus.CREATED).build();
-    //    }
-
-    //    @DeleteMapping("/{roleId}/permissions/{permissionId}")
-    //    public ResponseEntity<ApiResponse<Void>> removePermissionFromRole(
-    //            @PathVariable Long roleId, @PathVariable Long permissionId) {
-    //        roleService.removePermissionFromRole(roleId, permissionId);
-    //        return ResponseEntity.noContent().build();
 }
 
-// Xem chi tiết role đã trả ve list per
-	// Xem các permission của một role
-	//    @GetMapping("/{roleId}/permissions")
-	//    public ResponseEntity<ApiResponse<RoleResponse>> getPermissionsByRoleId(@PathVariable Long roleId) {
-	//        return ResponseEntity.status(HttpStatus.OK).body(
-	//                ApiResponse.<RoleResponse>builder()
-	//                        .data(roleService.getPermissionsByRoleId(roleId))
-	//                        .build()
-	//        );
-	//    }
-
-// Gán permission cho role //CHưa hoàn thiện
-	//
-	//    @PostMapping("/{roleId}/permissions")
-	//    public ResponseEntity<ApiResponse<RoleResponse>> updateRolePermissions(@PathVariable Long roleId,
-	//                                                                                       @RequestBody
-	// RolePermissionUpdateRequest request) {
-	//        return ResponseEntity.status(HttpStatus.OK).body(
-	//                ApiResponse.<RoleResponse>builder()
-	//                        .data(roleService.updateRolePermissions(roleId, request.getPermissionIds()))
-	//                        .build()
-	//        );
-	//    }
