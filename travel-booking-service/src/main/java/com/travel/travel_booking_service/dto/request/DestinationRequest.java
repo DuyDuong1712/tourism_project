@@ -1,13 +1,19 @@
 package com.travel.travel_booking_service.dto.request;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.*;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DestinationRequest {
+    @NotBlank(message = "DESTINATION_NAME_REQUIRED")
     private String name;
-    private String city;
-    private String country;
+
+    @NotBlank(message = "DESTINATION_CODE_REQUIRED")
+    private String code;
+
     private String description;
-    private Integer status;
-    private String image;
-} 
+}

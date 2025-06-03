@@ -1,137 +1,164 @@
 package com.travel.travel_booking_service.service.impl;
 
-import com.travel.travel_booking_service.dto.DestinationDTO;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
+import com.travel.travel_booking_service.dto.response.DestinationResponse;
 import com.travel.travel_booking_service.entity.Destination;
-import com.travel.travel_booking_service.exception.BusinessException;
-import com.travel.travel_booking_service.exception.DuplicateResourceException;
-import com.travel.travel_booking_service.exception.ResourceNotFoundException;
+import com.travel.travel_booking_service.enums.ErrorCode;
+import com.travel.travel_booking_service.exception.AppException;
 import com.travel.travel_booking_service.mapper.DestinationMapper;
 import com.travel.travel_booking_service.repository.DestinationRepository;
 import com.travel.travel_booking_service.service.DestinationService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.travel.travel_booking_service.service.UploadImageFile;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DestinationServiceImpl implements DestinationService {
 
-    private final DestinationRepository destinationRepository;
-    private final DestinationMapper destinationMapper;
+    DestinationRepository destinationRepository;
+    DestinationMapper destinationMapper;
+    UploadImageFile uploadImageFile;
 
+    // ---ADMIN---
     @Override
-    public DestinationDTO createDestination(DestinationDTO destinationDTO) {
-        validateDestination(destinationDTO);
-
-        if (isDestinationExists(destinationDTO.getName())) {
-            throw new DuplicateResourceException("Destination", "name", destinationDTO.getName());
+    public DestinationResponse createDestination(
+            String name, String code, String description, MultipartFile imageFile) {
+        // Validate required fields
+        if (name == null || name.trim().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_DESTINATION_NAME);
+        }
+        if (code == null || code.trim().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_DESTINATION_CODE);
         }
 
-        Destination destination = destinationMapper.toEntity(destinationDTO);
-        Destination savedDestination = destinationRepository.save(destination);
-        return destinationMapper.toDTO(savedDestination);
+        // Trim and validate name and code
+        String trimmedName = name.trim();
+        String trimmedCode = code.trim();
+
+        // Check for existing destination with same name or code
+        if (destinationRepository.existsByNameIgnoreCase(trimmedName)) {
+            throw new AppException(ErrorCode.DESTINATION_EXISTS);
+        }
+        if (destinationRepository.existsByCodeIgnoreCase(trimmedCode)) {
+            throw new AppException(ErrorCode.DESTINATION_CODE_EXISTS);
+        }
+
+        // Create destination entity
+        Destination destination = Destination.builder()
+                .name(trimmedName)
+                .code(trimmedCode)
+                .description(description)
+                .build();
+        // Handle image upload
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse cloudinaryUploadResponse = uploadImageFile.upLoadImage(imageFile);
+                destination.setImage(cloudinaryUploadResponse.getUrl());
+
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            }
+        }
+
+        // Save and return
+        destinationRepository.save(destination);
+        return destinationMapper.toDestinationResponse(destination);
     }
 
     @Override
-    public DestinationDTO updateDestination(Long id, DestinationDTO destinationDTO) {
-        validateDestination(destinationDTO);
+    public DestinationResponse updateDestination(
+            Long id, String name, String code, String description, MultipartFile imageFile) {
+        // Lấy destination theo id
+        Destination destination =
+                destinationRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.DESTINATION_NOT_FOUND));
 
-        Destination existingDestination = destinationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Destination", "id", id));
-
-        if (!existingDestination.getName().equals(destinationDTO.getName()) 
-                && isDestinationExists(destinationDTO.getName())) {
-            throw new DuplicateResourceException("Destination", "name", destinationDTO.getName());
+        // Validate required fields
+        if (name == null || name.trim().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_DESTINATION_NAME);
+        }
+        if (code == null || code.trim().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_DESTINATION_CODE);
         }
 
-        destinationMapper.updateEntityFromDTO(destinationDTO, existingDestination);
-        Destination updatedDestination = destinationRepository.save(existingDestination);
-        return destinationMapper.toDTO(updatedDestination);
+        String trimmedName = name.trim();
+        String trimmedCode = code.trim();
+
+        // Kiểm tra trùng tên (bỏ qua bản ghi hiện tại)
+        if (destinationRepository.existsByNameIgnoreCaseAndIdNot(trimmedName, id)) {
+            throw new AppException(ErrorCode.DESTINATION_EXISTS);
+        }
+
+        // Kiểm tra trùng code (bỏ qua bản ghi hiện tại)
+        if (destinationRepository.existsByCodeIgnoreCaseAndIdNot(trimmedCode, id)) {
+            throw new AppException(ErrorCode.DESTINATION_CODE_EXISTS);
+        }
+
+        // Cập nhật thông tin cho destination
+        destination.setName(trimmedName);
+        destination.setCode(trimmedCode);
+        destination.setDescription(description);
+
+        // Xử lý upload ảnh nếu có
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                CloudinaryUploadResponse cloudinaryUploadResponse = uploadImageFile.upLoadImage(imageFile);
+                destination.setImage(cloudinaryUploadResponse.getUrl());
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            }
+        }
+
+        // Lưu lại
+        destinationRepository.save(destination);
+
+        // Trả về response
+        return destinationMapper.toDestinationResponse(destination);
     }
 
     @Override
     public void deleteDestination(Long id) {
-        Destination destination = destinationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Destination", "id", id));
+        Destination destination =
+                destinationRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.DESTINATION_NOT_FOUND));
 
         if (destination.getTours() != null && !destination.getTours().isEmpty()) {
-            throw new BusinessException(ErrorCode.DESTINATION_IN_USE);
+            throw new AppException(ErrorCode.DESTINATION_IN_USE);
         }
 
-        destinationRepository.deleteById(id);
+        destinationRepository.delete(destination);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public DestinationDTO getDestinationById(Long id) {
-        Destination destination = destinationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Destination", "id", id));
-        return destinationMapper.toDTO(destination);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<DestinationDTO> getAllDestinations(Pageable pageable) {
-        return destinationRepository.findAll(pageable)
-                .map(destinationMapper::toDTO);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DestinationDTO> getPopularDestinations() {
-        return destinationRepository.findPopularDestinations().stream()
-                .map(destinationMapper::toDTO)
+    public List<DestinationResponse> getAllDestinations() {
+        return destinationRepository.findAll().stream()
+                .map(destinationMapper::toDestinationResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<DestinationDTO> searchDestinations(String keyword) {
-        return destinationRepository.searchDestinations(keyword).stream()
-                .map(destinationMapper::toDTO)
-                .collect(Collectors.toList());
+    public DestinationResponse changeDestinationStatus(Long id, StatusRequest statusRequest) {
+        Destination destination =
+                destinationRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.DESTINATION_NOT_FOUND));
+        destination.setInActive(statusRequest.getInActive());
+
+        return destinationMapper.toDestinationResponse(destinationRepository.save(destination));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean isDestinationExists(String name) {
-        return destinationRepository.existsByName(name);
+    public DestinationResponse getDestinationById(Long id) {
+        return null;
     }
-
-    @Override
-    public void validateDestination(DestinationDTO destinationDTO) {
-        if (destinationDTO.getName() == null || destinationDTO.getName().trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Destination name is required");
-        }
-
-        if (destinationDTO.getDescription() == null || destinationDTO.getDescription().trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Destination description is required");
-        }
-
-        if (destinationDTO.getRegion() == null || destinationDTO.getRegion().trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Destination region is required");
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DestinationDTO> getDestinationsByRegion(String region) {
-        return destinationRepository.findByRegion(region).stream()
-                .map(destinationMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<DestinationDTO> getDestinationsWithTourCount() {
-        return destinationRepository.findAllWithTourCount().stream()
-                .map(destinationMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-} 
+}

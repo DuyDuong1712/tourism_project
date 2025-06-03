@@ -1,177 +1,211 @@
 package com.travel.travel_booking_service.service.impl;
 
-import com.travel.travel_booking_service.dto.UserDTO;
-import com.travel.travel_booking_service.dto.UserRegistrationDTO;
-import com.travel.travel_booking_service.dto.UserUpdateDTO;
-import com.travel.travel_booking_service.entity.User;
-import com.travel.travel_booking_service.enums.ErrorCode;
-import com.travel.travel_booking_service.exception.BusinessException;
-import com.travel.travel_booking_service.exception.DuplicateResourceException;
-import com.travel.travel_booking_service.exception.ResourceNotFoundException;
-import com.travel.travel_booking_service.mapper.UserMapper;
-import com.travel.travel_booking_service.repository.UserRepository;
-import com.travel.travel_booking_service.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.travel.travel_booking_service.dto.request.UserCreationRequest;
+import com.travel.travel_booking_service.dto.request.UserRequest;
+import com.travel.travel_booking_service.dto.request.UserUpdateRequest;
+import com.travel.travel_booking_service.dto.response.RoleResponse;
+import com.travel.travel_booking_service.dto.response.UserResponse;
+import com.travel.travel_booking_service.entity.Role;
+import com.travel.travel_booking_service.entity.User;
+import com.travel.travel_booking_service.enums.ErrorCode;
+import com.travel.travel_booking_service.enums.RoleEnum;
+import com.travel.travel_booking_service.exception.AppException;
+import com.travel.travel_booking_service.mapper.RoleMapper;
+import com.travel.travel_booking_service.mapper.UserMapper;
+import com.travel.travel_booking_service.repository.RoleRepository;
+import com.travel.travel_booking_service.repository.UserRepository;
+import com.travel.travel_booking_service.service.UserService;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
+    UserRepository userRepository;
+    RoleRepository roleRepository;
+    UserMapper userMapper;
+    PasswordEncoder passwordEncoder;
+    private final RoleMapper roleMapper;
 
     @Override
-    public UserDTO registerUser(UserRegistrationDTO registrationDTO) {
-        if (isEmailExists(registrationDTO.getEmail())) {
-            throw new DuplicateResourceException("User", "email", registrationDTO.getEmail());
-        }
-        if (isUsernameExists(registrationDTO.getUsername())) {
-            throw new DuplicateResourceException("User", "username", registrationDTO.getUsername());
-        }
-
-        User user = userMapper.toEntity(registrationDTO);
-        user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
-        user.setActive(true);
-        user.setRole("USER");
-
-        User savedUser = userRepository.save(user);
-        return userMapper.toDTO(savedUser);
-    }
-
-    @Override
-    public UserDTO updateUser(Long id, UserUpdateDTO updateDTO) {
-        User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-
-        if (updateDTO.getEmail() != null && !updateDTO.getEmail().equals(existingUser.getEmail()) 
-                && isEmailExists(updateDTO.getEmail())) {
-            throw new DuplicateResourceException("User", "email", updateDTO.getEmail());
+    public UserResponse createUser(UserCreationRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())
+                || userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTS);
         }
 
-        userMapper.updateEntityFromDTO(updateDTO, existingUser);
-        User updatedUser = userRepository.save(existingUser);
-        return userMapper.toDTO(updatedUser);
-    }
+        User user = userMapper.toUser(request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-    @Override
-    public void deleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResourceNotFoundException("User", "id", id);
-        }
-        userRepository.deleteById(id);
-    }
+        Role role = roleRepository
+                .findByCode(request.getRole())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-    @Override
-    @Transactional(readOnly = true)
-    public UserDTO getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        return userMapper.toDTO(user);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public UserDTO getUserByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-        return userMapper.toDTO(user);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public UserDTO getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "username", username));
-        return userMapper.toDTO(user);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<UserDTO> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(userMapper::toDTO);
-    }
-
-    @Override
-    public void changePassword(Long id, String oldPassword, String newPassword) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
-        }
-
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-    }
-
-    @Override
-    public void resetPassword(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "email", email));
-
-        // Generate and send reset password token
-        String resetToken = generateResetToken();
-        user.setResetPasswordToken(resetToken);
-        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusHours(24));
-        userRepository.save(user);
-
-        // Send email with reset token
-        sendPasswordResetEmail(email, resetToken);
-    }
-
-    @Override
-    public void activateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        user.setActive(true);
-        userRepository.save(user);
-    }
-
-    @Override
-    public void deactivateUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
-        user.setActive(false);
-        userRepository.save(user);
-    }
-
-    @Override
-    public void updateUserRole(Long id, String role) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
         user.setRole(role);
-        userRepository.save(user);
+
+        UserResponse userResponse = userMapper.toUserResponse(userRepository.save(user));
+        userResponse.setRole(roleMapper.toRoleResponse(role));
+
+        return userResponse;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean isEmailExists(String email) {
-        return userRepository.existsByEmail(email);
+    public UserResponse registerAccount(UserRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTS);
+        }
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTS);
+        }
+
+        if (!request.getPassword().equals(request.getRetypePassword())) {
+            throw new AppException(ErrorCode.RETYPEPASSWORD_NOT_MATCH);
+        }
+
+        if (!request.getEmail().equals(request.getRetypeEmail())) {
+            throw new AppException(ErrorCode.RETYPEMAIL_NOT_MATCH);
+        }
+
+        User user = userMapper.toUser(request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Role role = roleRepository
+                .findByCode(RoleEnum.CUSTOMER.name())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+
+        user.setRole(role);
+
+        UserResponse userResponse = userMapper.toUserResponse(userRepository.save(user));
+        userResponse.setRole(roleMapper.toRoleResponse(role));
+
+        return userResponse;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public boolean isUsernameExists(String username) {
-        return userRepository.existsByUsername(username);
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+
+        List<UserResponse> userResponses = new ArrayList<>();
+        for (User user : users) {
+            Role role = user.getRole();
+            RoleResponse roleResponse = roleMapper.toRoleResponse(role);
+            UserResponse userResponse = userMapper.toUserResponse(user);
+            userResponse.setRole(roleResponse);
+            userResponses.add(userResponse);
+        }
+        return userResponses;
     }
 
-    private String generateResetToken() {
-        // Implement token generation logic
-        return UUID.randomUUID().toString();
+    @Override
+    public UserResponse updateUser(Long id, UserUpdateRequest request) {
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        userMapper.updateUser(user, request);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Role role = roleRepository
+                .findByCode(request.getRole())
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
+        user.setRole(role);
+
+        UserResponse userResponse = userMapper.toUserResponse(userRepository.save(user));
+        userResponse.setRole(roleMapper.toRoleResponse(role));
+        return userResponse;
     }
 
-    private void sendPasswordResetEmail(String email, String token) {
-        // Implement email sending logic
+    @Override
+    public UserResponse getUserById(Long id) {
+        return null;
     }
-} 
+
+    @Override
+    public void deleteUser(Long id) {}
+
+    @Override
+    public List<UserResponse> searchUsers(String keyword) {
+        return List.of();
+    }
+
+    @Override
+    public UserResponse getUserByEmail(String email) {
+        return null;
+    }
+
+    @Override
+    public UserResponse getUserByUsername(String username) {
+        return null;
+    }
+
+    //    @Override
+    //    public UserResponse getUserById(Long id) {
+    //        return convertToResponse(userRepository.findById(id)
+    //                .orElseThrow(() -> new RuntimeException("User not found")));
+    //    }
+    //
+    //    @Override
+    //    @Transactional
+    //    public UserResponse updateUser(Long id, UserRequest request) {
+    //        User user = userRepository.findById(id)
+    //                .orElseThrow(() -> new RuntimeException("User not found"));
+    //
+    //        user.setUsername(request.getUsername());
+    //        user.setEmail(request.getEmail());
+    //        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+    //            user.setPassword(passwordEncoder.encode(request.getPassword()));
+    //        }
+    //        user.setFirstName(request.getFirstName());
+    //        user.setLastName(request.getLastName());
+    //        user.setPhone(request.getPhone());
+    //        user.setAddress(request.getAddress());
+    //
+    //        return convertToResponse(userRepository.save(user));
+    //    }
+    //
+    //    @Override
+    //    @Transactional
+    //    public void deleteUser(Long id) {
+    //        userRepository.deleteById(id);
+    //    }
+    //
+    //    @Override
+    //    public List<UserResponse> searchUsers(String keyword) {
+    //        return userRepository.searchUsers(keyword).stream()
+    //                .map(this::convertToResponse)
+    //                .collect(Collectors.toList());
+    //    }
+    //
+    //    @Override
+    //    public UserResponse getUserByEmail(String email) {
+    //        return convertToResponse(userRepository.findByEmail(email)
+    //                .orElseThrow(() -> new RuntimeException("User not found")));
+    //    }
+    //
+    //    @Override
+    //    public UserResponse getUserByUsername(String username) {
+    //        return convertToResponse(userRepository.findByUsername(username)
+    //                .orElseThrow(() -> new RuntimeException("User not found")));
+    //    }
+    //
+    //    private UserResponse convertToResponse(User user) {
+    //        return UserResponse.builder()
+    //                .id(user.getId())
+    //                .username(user.getUsername())
+    //                .email(user.getEmail())
+    //                .firstName(user.getFirstName())
+    //                .lastName(user.getLastName())
+    //                .phone(user.getPhone())
+    //                .address(user.getAddress())
+    //                .build();
+    //    }
+}

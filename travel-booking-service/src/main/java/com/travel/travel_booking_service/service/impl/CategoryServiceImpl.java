@@ -1,117 +1,86 @@
 package com.travel.travel_booking_service.service.impl;
 
-import com.travel.travel_booking_service.dto.CategoryDTO;
-import com.travel.travel_booking_service.entity.Category;
-import com.travel.travel_booking_service.exception.BusinessException;
-import com.travel.travel_booking_service.exception.DuplicateResourceException;
-import com.travel.travel_booking_service.exception.ResourceNotFoundException;
-import com.travel.travel_booking_service.mapper.CategoryMapper;
-import com.travel.travel_booking_service.repository.CategoryRepository;
-import com.travel.travel_booking_service.service.CategoryService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.travel.travel_booking_service.dto.request.CategoryRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.dto.response.CategoryResponse;
+import com.travel.travel_booking_service.entity.Category;
+import com.travel.travel_booking_service.enums.ErrorCode;
+import com.travel.travel_booking_service.exception.AppException;
+import com.travel.travel_booking_service.mapper.CategoryMapper;
+import com.travel.travel_booking_service.repository.CategoryRepository;
+import com.travel.travel_booking_service.service.CategoryService;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CategoryServiceImpl implements CategoryService {
 
-    private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
+    CategoryRepository categoryRepository;
+    CategoryMapper categoryMapper;
 
     @Override
-    public CategoryDTO createCategory(CategoryDTO categoryDTO) {
-        validateCategory(categoryDTO);
-
-        if (isCategoryExists(categoryDTO.getName())) {
-            throw new DuplicateResourceException("Category", "name", categoryDTO.getName());
+    public CategoryResponse createCategory(CategoryRequest request) {
+        if (categoryRepository.existsByNameIgnoreCase(request.getName().trim())) {
+            throw new AppException(ErrorCode.CATEGORY_EXISTS);
         }
 
-        Category category = categoryMapper.toEntity(categoryDTO);
-        Category savedCategory = categoryRepository.save(category);
-        return categoryMapper.toDTO(savedCategory);
+        Category category = categoryMapper.toCategoryEntity(request);
+
+        return categoryMapper.toCategoryResponse(categoryRepository.save(category));
     }
 
     @Override
-    public CategoryDTO updateCategory(Long id, CategoryDTO categoryDTO) {
-        validateCategory(categoryDTO);
+    public List<CategoryResponse> getAllCategories() {
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream().map(categoryMapper::toCategoryResponse).collect(Collectors.toList());
+    }
 
-        Category existingCategory = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
+    @Override
+    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
+        Category category =
+                categoryRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        if (!existingCategory.getName().equals(categoryDTO.getName()) 
-                && isCategoryExists(categoryDTO.getName())) {
-            throw new DuplicateResourceException("Category", "name", categoryDTO.getName());
+        if (!category.getName().equalsIgnoreCase(request.getName())
+                && categoryRepository.existsByNameIgnoreCase(request.getName())) {
+            throw new AppException(ErrorCode.CATEGORY_EXISTS);
         }
 
-        categoryMapper.updateEntityFromDTO(categoryDTO, existingCategory);
-        Category updatedCategory = categoryRepository.save(existingCategory);
-        return categoryMapper.toDTO(updatedCategory);
+        categoryMapper.updateCategory(category, request);
+
+        categoryRepository.save(category);
+
+        return categoryMapper.toCategoryResponse(category);
     }
 
     @Override
     public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
+        Category category =
+                categoryRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         if (category.getTours() != null && !category.getTours().isEmpty()) {
-            throw new BusinessException(ErrorCode.CATEGORY_IN_USE);
+            throw new AppException(ErrorCode.CATEGORY_IN_USE);
         }
 
-        categoryRepository.deleteById(id);
+        categoryRepository.delete(category);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public CategoryDTO getCategoryById(Long id) {
-        Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category", "id", id));
-        return categoryMapper.toDTO(category);
-    }
+    public CategoryResponse changeCategoryStatus(Long id, StatusRequest statusRequest) {
+        Category category =
+                categoryRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
+        category.setInActive(statusRequest.getInActive());
 
-    @Override
-    @Transactional(readOnly = true)
-    public Page<CategoryDTO> getAllCategories(Pageable pageable) {
-        return categoryRepository.findAll(pageable)
-                .map(categoryMapper::toDTO);
+        return categoryMapper.toCategoryResponse(categoryRepository.save(category));
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CategoryDTO> getPopularCategories() {
-        return categoryRepository.findPopularCategories().stream()
-                .map(categoryMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public boolean isCategoryExists(String name) {
-        return categoryRepository.existsByName(name);
-    }
-
-    @Override
-    public void validateCategory(CategoryDTO categoryDTO) {
-        if (categoryDTO.getName() == null || categoryDTO.getName().trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Category name is required");
-        }
-
-        if (categoryDTO.getDescription() == null || categoryDTO.getDescription().trim().isEmpty()) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Category description is required");
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<CategoryDTO> getCategoriesWithTourCount() {
-        return categoryRepository.findAllWithTourCount().stream()
-                .map(categoryMapper::toDTO)
-                .collect(Collectors.toList());
-    }
-} 
+}

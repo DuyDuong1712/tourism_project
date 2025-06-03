@@ -1,19 +1,36 @@
 package com.travel.travel_booking_service.dto.response;
 
-import lombok.Data;
 import java.time.LocalDateTime;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DestinationResponse {
-    private Integer id;
+    private Long id;
+
     private String name;
-    private String city;
-    private String country;
+
+    private String code;
+
     private String description;
-    private Integer status;
+
     private String image;
-    private LocalDateTime createddate;
-    private LocalDateTime modifieddate;
-    private String createdby;
-    private String modifiedby;
-} 
+
+    private Boolean inActive;
+
+    private LocalDateTime createdDate;
+
+    private LocalDateTime modifiedDate;
+
+    private String createdBy;
+
+    private String modifiedBy;
+
+    private Long totalTour;
+}

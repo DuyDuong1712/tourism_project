@@ -1,30 +1,32 @@
 package com.travel.travel_booking_service.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "tour_images")
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TourImage extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tour_id", nullable = false)
     private Tour tour;
 
-    @Column(name = "cloudinary_public_id", nullable = false)
+    @Column(name = "cloudinary_public_id")
     private String cloudinaryPublicId;
 
-    @Column(name = "cloudinary_url", nullable = false)
+    @Column(name = "cloudinary_url", nullable = false, length = 500)
     private String cloudinaryUrl;
-
-    @Column(name = "is_thumbnail")
-    private Boolean isThumbnail = false;
 
     @Column(name = "alt_text")
     private String altText;
+
+    @Column(name = "is_primary", columnDefinition = "TINYINT DEFAULT 0")
+    private Boolean isPrimary;
 }

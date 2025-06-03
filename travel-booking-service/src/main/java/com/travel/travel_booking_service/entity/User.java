@@ -1,18 +1,27 @@
 package com.travel.travel_booking_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 @Entity
-@Table(name = "user")
-@Data
+@Table(name = "users")
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class User extends BaseEntity {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
+
     @Column(name = "username", nullable = false, unique = true)
     private String username;
 
@@ -25,36 +34,50 @@ public class User extends BaseEntity {
     @Column(name = "phone")
     private String phone;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "address")
     private String address;
 
-    @Column(name = "dateofbirth")
+    @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Column(name = "gender")
+    @Column(name = "gender", length = 50)
     private String gender;
 
-    @Column(name = "profileimg")
+    @Column(name = "profile_img")
     private String profileImg;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserRole> userRoles = new ArrayList<>();
+    @Column(name = "in_active", columnDefinition = "TINYINT DEFAULT 1")
+    private Boolean inActive;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @Column(name = "email_verified", columnDefinition = "TINYINT DEFAULT 0")
+    private Boolean emailVerified;
+
+    @OneToMany(
+            mappedBy = "customer",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = true)
     private List<Booking> bookings = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(
+            mappedBy = "customer",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
-    @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL)
-    private List<BookingManagement> managedBookings = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(
+            mappedBy = "user",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "guide", cascade = CascadeType.ALL)
-    private List<Trip> guidedTrips = new ArrayList<>();
+    @PrePersist
+    public void prePersist() {
+        if (inActive == null) inActive = true;
+    }
 }

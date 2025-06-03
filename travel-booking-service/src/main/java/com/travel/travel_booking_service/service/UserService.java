@@ -1,24 +1,28 @@
 package com.travel.travel_booking_service.service;
 
-import com.travel.travel_booking_service.dto.UserDTO;
-import com.travel.travel_booking_service.dto.UserRegistrationDTO;
-import com.travel.travel_booking_service.dto.UserUpdateDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import java.util.List;
+
+import com.travel.travel_booking_service.dto.request.UserCreationRequest;
+import com.travel.travel_booking_service.dto.request.UserRequest;
+import com.travel.travel_booking_service.dto.request.UserUpdateRequest;
+import com.travel.travel_booking_service.dto.response.UserResponse;
 
 public interface UserService {
-    UserDTO registerUser(UserRegistrationDTO registrationDTO);
-    UserDTO updateUser(Long id, UserUpdateDTO updateDTO);
+    UserResponse createUser(UserCreationRequest request);
+
+    List<UserResponse> getAllUsers();
+
+    UserResponse getUserById(Long id);
+
+    UserResponse updateUser(Long id, UserUpdateRequest request);
+
     void deleteUser(Long id);
-    UserDTO getUserById(Long id);
-    UserDTO getUserByEmail(String email);
-    UserDTO getUserByUsername(String username);
-    Page<UserDTO> getAllUsers(Pageable pageable);
-    void changePassword(Long id, String oldPassword, String newPassword);
-    void resetPassword(String email);
-    void activateUser(Long id);
-    void deactivateUser(Long id);
-    void updateUserRole(Long id, String role);
-    boolean isEmailExists(String email);
-    boolean isUsernameExists(String username);
-} 
+
+    List<UserResponse> searchUsers(String keyword);
+
+    UserResponse getUserByEmail(String email);
+
+    UserResponse getUserByUsername(String username);
+
+    UserResponse registerAccount(UserRequest request);
+}

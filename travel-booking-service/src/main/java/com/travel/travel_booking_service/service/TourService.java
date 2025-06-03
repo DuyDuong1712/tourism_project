@@ -1,24 +1,24 @@
 package com.travel.travel_booking_service.service;
 
-import com.travel.travel_booking_service.dto.TourDTO;
-import com.travel.travel_booking_service.dto.TourSearchDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.request.TourRequest;
+import com.travel.travel_booking_service.dto.response.TourResponse;
+
 public interface TourService {
-    TourDTO createTour(TourDTO tourDTO);
-    TourDTO updateTour(Long id, TourDTO tourDTO);
+    TourResponse createTour(TourRequest request);
+
+    List<TourResponse> getAllTours();
+
+    TourResponse getTourById(Long id);
+
+    TourResponse updateTour(Long id, TourRequest request);
+
     void deleteTour(Long id);
-    TourDTO getTourById(Long id);
-    Page<TourDTO> getAllTours(Pageable pageable);
-    Page<TourDTO> searchTours(TourSearchDTO searchDTO, Pageable pageable);
-    List<TourDTO> getToursByCategory(Long categoryId);
-    List<TourDTO> getToursByDestination(Long destinationId);
-    List<TourDTO> getUpcomingTours();
-    List<TourDTO> getPopularTours();
-    void updateTourStatus(Long id, String status);
-    boolean isTourAvailable(Long id);
-    void updateTourCapacity(Long id, int newCapacity);
-} 
+
+    List<TourResponse> searchTours(String keyword);
+
+    List<TourResponse> getToursByCategory(Long categoryId);
+
+    List<TourResponse> getToursByDestination(Long destinationId);
+}

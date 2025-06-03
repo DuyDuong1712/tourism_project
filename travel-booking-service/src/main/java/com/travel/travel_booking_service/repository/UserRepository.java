@@ -1,13 +1,17 @@
 package com.travel.travel_booking_service.repository;
 
-import com.travel.travel_booking_service.entity.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.travel.travel_booking_service.entity.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsernameAndStatus(String username, int status);
-    
+    boolean existsByUsername(String username);
+
+    boolean existsByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 }

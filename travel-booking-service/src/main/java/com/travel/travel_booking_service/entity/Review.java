@@ -1,44 +1,56 @@
 package com.travel.travel_booking_service.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 @Entity
 @Table(name = "reviews")
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Review extends BaseEntity {
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trip_id", nullable = false)
-    private Trip trip;
-
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "booking_id", nullable = false, unique = true)
+    @OneToOne
+    @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
 
-    @Column(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", nullable = false)
+    private User customer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tour_id", nullable = false)
+    private Tour tour;
+
+    @Column(name = "rating", nullable = false)
     private Integer rating;
+
+    @Column(name = "title")
+    private String title;
 
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
-    @Column(name = "inActive")
-    private Integer inActive = 1;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "ENUM('approved', 'hidden') DEFAULT 'approved'")
+    private ReviewStatus status;
 
-    @Column(name = "isDelete")
-    private Integer isDelete = 0;
-
-    @OneToMany(mappedBy = "review", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "review",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = true)
     private List<ReviewImage> reviewImages = new ArrayList<>();
+
+    public enum ReviewStatus {
+        APPROVED,
+        HIDDEN
+    }
 }

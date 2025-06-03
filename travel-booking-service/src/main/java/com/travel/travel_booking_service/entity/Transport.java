@@ -1,38 +1,46 @@
 package com.travel.travel_booking_service.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+
 @Entity
 @Table(name = "transports")
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Transport extends BaseEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable = false, length = 50)
     private String type;
+
+    @Column(name = "brand", nullable = false, length = 50)
+    private String brand;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "image")
-    private String image;
+    @Column(name = "in_active", columnDefinition = "TINYINT DEFAULT 1")
+    private Boolean inActive;
 
-    @Column(name = "inActive")
-    private int inActive = 1;
+    @OneToMany(
+            mappedBy = "transport",
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            orphanRemoval = true)
+    private List<Tour> tours = new ArrayList<>();
 
-    @Column(name = "isDelete")
-    private int isDelete = 0;
-
-    @OneToMany(mappedBy = "transport", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
-    private List<TourTransport> tourTransports = new ArrayList<>();
+    @PrePersist
+    public void prePersist() {
+        if (inActive == null) inActive = true;
+    }
 }

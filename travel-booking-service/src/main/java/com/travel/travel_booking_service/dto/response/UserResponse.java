@@ -1,23 +1,24 @@
 package com.travel.travel_booking_service.dto.response;
 
-import lombok.Data;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserResponse {
-    private Integer id;
+    private Long id;
     private String username;
     private String fullname;
     private String phone;
     private String email;
     private String address;
-    private LocalDate dateofbirth;
+    private LocalDate dateOfBirth;
     private String gender;
-    private String profileimg;
-    private Integer status;
-    private LocalDateTime createddate;
-    private LocalDateTime modifieddate;
-    private String createdby;
-    private String modifiedby;
-} 
+    private String profileImg;
+    RoleResponse role;
+}

@@ -1,28 +1,35 @@
 package com.travel.travel_booking_service.entity;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.*;
+
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 @Entity
 @Table(name = "permissions")
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Permission extends BaseEntity{
-    @Column(name = "name", nullable = false)
-    private String name;
-
-    @Column(name = "code", nullable = false, unique = true)
+@FieldDefaults(level = AccessLevel.PRIVATE)
+public class Permission extends BaseEntity {
+    @Column(name = "code", nullable = false, unique = true, length = 100)
     private String code;
 
-    @Column(name = "status")
-    private int status = 1;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
-    @OneToMany(mappedBy = "permission", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
-    List<RolePermission> rolePermissions = new ArrayList<>();
+    @Column(name = "in_active")
+    private Boolean inActive;
+
+    @OneToMany(mappedBy = "permission", cascade = CascadeType.ALL)
+    private List<RolePermission> rolePermissions;
+
+    @PrePersist
+    public void prePersist() {
+        if (inActive == null) inActive = true;
+    }
 }
