@@ -6,7 +6,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/tour_management
+    url: jdbc:mysql://localhost:3306/tour_management_fix
     username: root
     password: Chiduy171203
 

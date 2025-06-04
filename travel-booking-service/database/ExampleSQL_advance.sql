@@ -117,7 +117,7 @@ INSERT INTO `destinations` (`name`, `code`, `description`, `created_by`) VALUES
 INSERT INTO `departures` (`name`, `code`, `address`, `created_by`) VALUES
 ('Hà Nội', 'HN_DEP', '123 Đường Láng, Đống Đa, Hà Nội', 'admin'),
 ('Hồ Chí Minh', 'HCM_DEP', '456 Nguyễn Huệ, Quận 1, TP.HCM', 'admin'),
-('Đà Nẵng', 'DN_DEP', '789 Bạch Đằng, Hải Châu, Đà Nẵng', 'admin');
+('Đà Nẵng', 'DN_DEP' '789 Bạch Đằng, Hải Châu, Đà Nẵng', 'admin');
 
 -- 7. Dữ liệu cho bảng transports
 INSERT INTO `transports` (`name`, `type`, `brand`, `description`, `created_by`) VALUES

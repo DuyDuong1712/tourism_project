@@ -26,7 +26,4 @@ public class TourImage extends BaseEntity {
 
     @Column(name = "alt_text")
     private String altText;
-
-    @Column(name = "is_primary", columnDefinition = "TINYINT DEFAULT 0")
-    private Boolean isPrimary;
 }

@@ -23,9 +23,6 @@ public class Tour extends BaseEntity {
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "summary", columnDefinition = "TEXT")
-    private String summary;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
@@ -42,20 +39,14 @@ public class Tour extends BaseEntity {
     @JoinColumn(name = "transport_id", nullable = false)
     private Transport transport;
 
-    @Column(name = "duration")
-    private String duration;
-
-    @Column(name = "min_slots", columnDefinition = "INT DEFAULT 1")
-    private Integer minSlots;
-
-    @Column(name = "max_slots")
-    private Integer maxSlots;
+    @Column(name = "is_featured", columnDefinition = "TINYINT DEFAULT 1")
+    private Boolean isFeatured;
 
     @Column(name = "in_active", columnDefinition = "TINYINT DEFAULT 1")
     private Boolean inActive;
 
     @OneToOne(mappedBy = "tour", cascade = CascadeType.ALL)
-    private TourInfomation tourInformation;
+    private TourInformation tourInformation;
 
     @OneToMany(
             mappedBy = "tour",
@@ -76,7 +67,8 @@ public class Tour extends BaseEntity {
             fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             orphanRemoval = true)
-    private List<TourDeparture> tourDepartures = new ArrayList<>();
+    private List<TourDetail> tourDetails = new ArrayList<>();
+
 
     @OneToMany(
             mappedBy = "tour",
@@ -88,5 +80,6 @@ public class Tour extends BaseEntity {
     @PrePersist
     public void prePersist() {
         if (inActive == null) inActive = true;
+        isFeatured = false;
     }
 }

@@ -149,6 +149,7 @@ public enum ErrorCode {
     // Mã lỗi liên quan đến Role
     ROLE_NOT_FOUND(9000, "Không tìm thấy vai trò", HttpStatus.NOT_FOUND),
     ROLE_ADMIN_CAN_NOT_DELETE(9000, "Không thể xóa admin", HttpStatus.NOT_FOUND),
+    ROLE_IS_IN_USE(9000, "Role đang được gán cho user", HttpStatus.NOT_FOUND),
     ROLE_EXISTS(9001, "Vai trò đã tồn tại", HttpStatus.CONFLICT),
     ROLE_CREATION_FAILED(9002, "Tạo vai trò thất bại", HttpStatus.INTERNAL_SERVER_ERROR),
     ROLE_UPDATE_FAILED(9003, "Cập nhật vai trò thất bại", HttpStatus.INTERNAL_SERVER_ERROR),

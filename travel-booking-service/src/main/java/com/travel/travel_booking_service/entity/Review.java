@@ -29,7 +29,7 @@ public class Review extends BaseEntity {
     @JoinColumn(name = "tour_id", nullable = false)
     private Tour tour;
 
-    @Column(name = "rating", nullable = false)
+    @Column(name = "rating", nullable = false, columnDefinition = "TINYINT CHECK (rating BETWEEN 1 AND 5)")
     private Integer rating;
 
     @Column(name = "title")
@@ -50,7 +50,7 @@ public class Review extends BaseEntity {
     private List<ReviewImage> reviewImages = new ArrayList<>();
 
     public enum ReviewStatus {
-        APPROVED,
-        HIDDEN
+        approved,
+        hidden
     }
 }

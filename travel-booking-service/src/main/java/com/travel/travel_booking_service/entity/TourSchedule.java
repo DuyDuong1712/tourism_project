@@ -25,6 +25,6 @@ public class TourSchedule extends BaseEntity {
     @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "activities", columnDefinition = "LONGTEXT")
-    private String activities;
+    @Column(name = "information", columnDefinition = "LONGTEXT")
+    private String information;
 }

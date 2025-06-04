@@ -3,6 +3,8 @@ package com.travel.travel_booking_service.dto.response;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,4 +19,5 @@ public class UserResponse {
     String profileImg;
     String role;
     Boolean inActive;
+    LocalDateTime createdDate;
 }

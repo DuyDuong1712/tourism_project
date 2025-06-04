@@ -31,7 +31,7 @@ public class BookingPassenger extends BaseEntity {
     private Gender gender;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "passenger_type", nullable = false, columnDefinition = "ENUM('adult', 'children', 'baby', 'infant')")
+    @Column(name = "passenger_type", nullable = false, columnDefinition = "ENUM('adult', 'children', 'child', 'baby')")
     private PassengerType passengerType;
 
     @Column(name = "special_requirements", columnDefinition = "TEXT")
@@ -46,7 +46,7 @@ public class BookingPassenger extends BaseEntity {
     public enum PassengerType {
         ADULT,
         CHILDREN,
-        BABY,
-        INFANT
+        CHILD,
+        BABY
     }
 }

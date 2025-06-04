@@ -104,6 +104,9 @@ public class RoleServiceImpl implements RoleService {
         if (role.getCode().equalsIgnoreCase("ADMIN")) {
             throw new AppException(ErrorCode.ROLE_ADMIN_CAN_NOT_DELETE);
         }
+        if(!role.getUsers().isEmpty()) {
+            throw new AppException(ErrorCode.ROLE_IS_IN_USE);
+        }
         roleRepository.delete(role);
     }
 

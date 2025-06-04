@@ -13,7 +13,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TourInfomation extends BaseEntity {
+public class TourInformation extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tour_id", nullable = false, unique = true)
     private Tour tour;
@@ -30,18 +30,10 @@ public class TourInfomation extends BaseEntity {
     @Column(name = "ideal_time", columnDefinition = "TEXT")
     private String idealTime;
 
-    @Column(name = "what_included", columnDefinition = "TEXT")
-    private String whatIncluded;
+    @Column(name = "promotion", columnDefinition = "TEXT")
+    private String promotion;
 
-    @Column(name = "what_excluded", columnDefinition = "TEXT")
-    private String whatExcluded;
+    @Column(name = "vehicle", columnDefinition = "TEXT")
+    private String vehicle;
 
-    @Column(name = "important_notes", columnDefinition = "TEXT")
-    private String importantNotes;
-
-    @Column(name = "terms_conditions", columnDefinition = "TEXT")
-    private String termsConditions;
-
-    @Column(name = "cancellation_policy", columnDefinition = "TEXT")
-    private String cancellationPolicy;
 }

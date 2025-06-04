@@ -1,6 +1,5 @@
 package com.travel.travel_booking_service.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +19,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Booking extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tour_departure_id", nullable = false)
-    private TourDeparture tourDeparture;
+    @JoinColumn(name = "tour_detail_id", nullable = false)
+    private TourDetail tourDetail;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
@@ -39,23 +38,23 @@ public class Booking extends BaseEntity {
     @Column(name = "infant_count", columnDefinition = "INT DEFAULT 0")
     private Integer infantCount;
 
-    @Column(name = "total_people", nullable = false)
+    @Column(name = "total_people", nullable = false, columnDefinition = "INT DEFAULT 1")
     private Integer totalPeople;
 
     @Column(name = "single_room_count", columnDefinition = "INT DEFAULT 0")
     private Integer singleRoomCount;
 
-    @Column(name = "subtotal", nullable = false, precision = 15, scale = 2)
-    private BigDecimal subtotal;
+    @Column(name = "subtotal", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long subtotal;
 
-    @Column(name = "discount_amount", precision = 15, scale = 2)
-    private BigDecimal discountAmount;
+    @Column(name = "discount_amount", columnDefinition = "BIGINT DEFAULT 0")
+    private Long discountAmount;
 
-    @Column(name = "tax_amount", precision = 15, scale = 2)
-    private BigDecimal taxAmount;
+    @Column(name = "tax_amount", columnDefinition = "BIGINT DEFAULT 0")
+    private Long taxAmount;
 
-    @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(name = "total_amount", nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long totalAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(
