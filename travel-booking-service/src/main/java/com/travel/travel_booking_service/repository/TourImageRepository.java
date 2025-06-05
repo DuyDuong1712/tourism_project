@@ -11,4 +11,6 @@ public interface TourImageRepository extends CrudRepository<TourImage, Long> {
     List<TourImage> getByTour(Tour tour);
 
     List<TourImage> getByTour_Id(Long tourId);
+
+    void deleteByTourId(Long id);
 }

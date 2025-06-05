@@ -35,10 +35,9 @@ public class TourDetail extends BaseEntity {
     private Integer stock;
 
     @Column(name = "booked_slots", columnDefinition = "INT DEFAULT 0")
-    private Integer bookedSlots;
+    private Integer bookedSlots = 0;
 
     @Transient
-    @Column(name = "remaining_slots", columnDefinition = "INT DEFAULT 0")
     private Integer remainingSlots;
 
     @Enumerated(EnumType.STRING)
@@ -69,16 +68,16 @@ public class TourDetail extends BaseEntity {
     @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent;
 
-    @PrePersist
-    @PreUpdate
-    public void calculateRemainingSlots() {
-        if (stock != null && bookedSlots != null) {
-            this.remainingSlots = stock - bookedSlots;
-        }
-    }
+//    @PrePersist
+//    @PreUpdate
+//    public void calculateRemainingSlots() {
+//        if (stock != null && bookedSlots != null) {
+//            this.remainingSlots = stock - bookedSlots;
+//        }
+//    }
 
     public int getRemainingSlots() {
-        return stock - bookedSlots;
+        return (stock != null ? stock : 0) - (bookedSlots != null ? bookedSlots : 0);
     }
 
     @Override

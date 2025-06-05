@@ -11,4 +11,6 @@ import com.travel.travel_booking_service.entity.TourDetail;
 public interface TourDetailRepository extends JpaRepository<TourDetail, Long> {
 
     List<TourDetail> findByTour_Id(Long tourId);
+
+    void deleteByTourId(Long id);
 }

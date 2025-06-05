@@ -56,36 +56,20 @@ public class Tour extends BaseEntity {
     @JsonManagedReference("tour-information")
     private TourInformation tourInformation;
 
-    @OneToMany(
-            mappedBy = "tour",
-            fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("tour-schedules")
     private List<TourSchedule> tourSchedules = new ArrayList<>();
 
-    @OneToMany(
-            mappedBy = "tour",
-            fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("tour-images")
     private List<TourImage> tourImages = new ArrayList<>();
 
-    @OneToMany(
-            mappedBy = "tour",
-            fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("tour-details")
     @ToString.Exclude
     private List<TourDetail> tourDetails = new ArrayList<>();
 
-    @OneToMany(
-            mappedBy = "tour",
-            fetch = FetchType.LAZY,
-            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference("tour-reviews")
     private List<Review> reviews = new ArrayList<>();
 

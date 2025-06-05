@@ -38,6 +38,12 @@ public class AuthenticationController {
                 .body(ApiResponse.<AuthenticationResponse>builder().data(result).build());
     }
 
+    @PostMapping("/register")
+    public ApiResponse<Void> register(@RequestBody LogoutRequest logoutRequest) throws ParseException, JOSEException {
+        authenticationService.logout(logoutRequest);
+        return ApiResponse.<Void>builder().build();
+    }
+
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@RequestBody LogoutRequest logoutRequest) throws ParseException, JOSEException {
         authenticationService.logout(logoutRequest);

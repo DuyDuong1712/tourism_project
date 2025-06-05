@@ -5,11 +5,17 @@ import lombok.experimental.FieldDefaults;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AuthenticationResponse {
-    String token;
-    LoginResponse loginResponse;
+public class TourInformationResponse {
+    Long id;
+    Long TourId;
+    String attractions;
+    String cuisine;
+    String idealTime;
+    String vehicle;
+    String promotion;
+    String suitableObject;
 }

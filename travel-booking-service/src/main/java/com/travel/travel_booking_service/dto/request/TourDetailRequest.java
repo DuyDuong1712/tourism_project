@@ -33,7 +33,7 @@ public class TourDetailRequest {
     private Integer stock; // Changed to String to match JSON
 
     @JsonProperty("discount")
-    private Long discount; // Changed to String to match JSON
+    private Integer discount; // Changed to String to match JSON
 
     @JsonProperty("dayStart")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")

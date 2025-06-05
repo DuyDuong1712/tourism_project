@@ -1,12 +1,14 @@
 package com.travel.travel_booking_service.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class TourImageResponse {
-    private String url;
+    private Long id;
+    private Long TourId;
+    private String ImageUrl;
 }

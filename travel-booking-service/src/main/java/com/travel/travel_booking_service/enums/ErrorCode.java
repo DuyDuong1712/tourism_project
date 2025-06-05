@@ -9,6 +9,7 @@ import lombok.Getter;
 public enum ErrorCode {
     // Mã lỗi chung
     UNKNOWN_ERROR(1000, "Lỗi không xác định", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_JSON_DATA(1000, "Json không đúng", HttpStatus.INTERNAL_SERVER_ERROR),
     VALIDATION_ERROR(1001, "Lỗi validation", HttpStatus.BAD_REQUEST),
     DATABASE_ERROR(1002, "Lỗi cơ sở dữ liệu", HttpStatus.INTERNAL_SERVER_ERROR),
     UNAUTHENTICATED(1003, "Unauthenticated", HttpStatus.UNAUTHORIZED),
@@ -20,6 +21,8 @@ public enum ErrorCode {
     EXPIRED_SESSION(1009, "Phiên làm việc đã hết hạn", HttpStatus.UNAUTHORIZED),
     SYSTEM_MAINTENANCE(1010, "Hệ thống đang bảo trì", HttpStatus.SERVICE_UNAVAILABLE),
     INVALID_KEY(1011, "Không tìm thấy mã lỗi", HttpStatus.BAD_REQUEST),
+    DATABASE_CONSTRAINT_VIOLATION(1011, "DATABASE_CONSTRAINT_VIOLATION", HttpStatus.BAD_REQUEST),
+    TOUR_SAVE_FAILED(1011, "TOUR_SAVE_FAILED", HttpStatus.BAD_REQUEST),
 
     // Mã lỗi liên quan đến User
     USER_NOT_FOUND(2000, "Không tìm thấy người dùng", HttpStatus.NOT_FOUND),
@@ -55,6 +58,8 @@ public enum ErrorCode {
     INVALID_TOUR_DURATION(3008, "Thời gian tour không hợp lệ", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_SLOTS(3009, "Không đủ chỗ cho tour", HttpStatus.CONFLICT),
     INVALID_TOUR_CATEGORY(3010, "Danh mục tour không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_SCHEDULE_DATA(3010, "lịch trình tour không hợp lệ", HttpStatus.BAD_REQUEST),
+    INVALID_TOUR_DETAIL_DATA(3010, "chi tiết tour không hợp lệ", HttpStatus.BAD_REQUEST),
 
     // Mã lỗi liên quan đến Booking
     BOOKING_NOT_FOUND(4000, "Không tìm thấy đơn đặt tour", HttpStatus.NOT_FOUND),

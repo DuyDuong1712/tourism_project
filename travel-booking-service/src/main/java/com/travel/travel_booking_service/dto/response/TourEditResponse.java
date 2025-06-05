@@ -11,15 +11,15 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TourResponse {
-    Long id;
+public class TourEditResponse {
     String title;
+    Long catagoryId;
+    Long departureId;
+    Long destinationId;
+    Long transportId;
     String description;
-    List<String> tourImages;
-    Boolean inActive;
-    Boolean isFeatured;
-    String category;
-    String departure;
-    String destination;
-    String transportation;
+    TourInformationResponse tourInformation;
+    List<TourScheduleResponse> tourSchedules;
+    List<TourDetailEdit> tourDetails;
+    List<TourImageResponse> images;
 }

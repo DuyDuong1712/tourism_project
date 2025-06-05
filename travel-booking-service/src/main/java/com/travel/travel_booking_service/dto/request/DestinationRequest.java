@@ -4,7 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

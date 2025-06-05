@@ -2,12 +2,6 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.request.FeaturedRequest;
-import com.travel.travel_booking_service.dto.request.StatusRequest;
-import com.travel.travel_booking_service.dto.request.ToursDetailsStatusRequest;
-import com.travel.travel_booking_service.dto.response.DestinationResponse;
-import jakarta.validation.Valid;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +9,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.travel.travel_booking_service.dto.request.TourRequest;
+import com.travel.travel_booking_service.dto.request.FeaturedRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.dto.request.ToursDetailsStatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
+import com.travel.travel_booking_service.dto.response.TourDetailResponse;
+import com.travel.travel_booking_service.dto.response.TourEditResponse;
 import com.travel.travel_booking_service.dto.response.TourResponse;
 import com.travel.travel_booking_service.service.TourService;
 
@@ -63,28 +61,84 @@ public class AdminTourController {
                         .build());
     }
 
-    @GetMapping("/tours-with-details")
-    public ResponseEntity<ApiResponse<List<TourResponse>>> getAllToursWithDetail() {
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<List<TourResponse>>> getAllTours() {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<List<TourResponse>>builder()
+                        .data(tourService.getAllTours())
+                        .build());
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<ApiResponse<List<TourResponse>>> getAllToursFiltered(
+            @RequestParam(required = false) Long destinationId,
+            @RequestParam(required = false) Long departureId,
+            @RequestParam(required = false) Long transportationId,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Boolean inActive,
+            @RequestParam(required = false) Boolean isFeatured,
+            @RequestParam(required = false) String title) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<TourResponse>>builder()
+                        .data(tourService.getAllToursFiltered(
+                                destinationId, departureId, transportationId, categoryId, inActive, isFeatured, title))
+                        .build());
+    }
+
+    @GetMapping("/tours/{id}/details")
+    public ResponseEntity<ApiResponse<List<TourDetailResponse>>> getTourDetails(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<TourDetailResponse>>builder()
+                        .data(tourService.getTourDetailsByTourId(id))
+                        .build());
+    }
+
+    @GetMapping("/tours-with-details")
+    public ResponseEntity<ApiResponse<List<TourDetailResponse>>> getAllToursWithDetail() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<TourDetailResponse>>builder()
                         .data(tourService.getAllToursWithDetails())
                         .build());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<TourResponse>> getTourById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<TourEditResponse>> getTourById(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<TourResponse>builder()
+                .body(ApiResponse.<TourEditResponse>builder()
                         .data(tourService.getTourById(id))
                         .build());
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<TourResponse>> updateTour(
-            @PathVariable Long id, @RequestBody @Valid TourRequest request) {
+            @PathVariable Long id,
+            @RequestParam("title") String title,
+            @RequestParam(value = "isFeatured", required = false) Boolean isFeatured,
+            @RequestParam("categoryId") Long categoryId,
+            @RequestParam("destinationId") Long destinationId,
+            @RequestParam("departureId") Long departureId,
+            @RequestParam("transportationId") Long transportationId,
+            @RequestParam("description") String description,
+            @RequestParam("information") String informationJson,
+            @RequestParam("schedule") String scheduleJson,
+            @RequestParam("tour_detail") String tourDetailJson,
+            @RequestParam(value = "images", required = false) List<MultipartFile> imageFiles)
+            throws JsonProcessingException {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<TourResponse>builder()
-                        .data(tourService.updateTour(id, request))
+                        .data(tourService.updateTour(
+                                id,
+                                title,
+                                isFeatured,
+                                categoryId,
+                                destinationId,
+                                departureId,
+                                transportationId,
+                                description,
+                                informationJson,
+                                scheduleJson,
+                                tourDetailJson,
+                                imageFiles))
                         .build());
     }
 
@@ -106,20 +160,20 @@ public class AdminTourController {
     public ResponseEntity<ApiResponse<Void>> changeToursStatus(
             @PathVariable Long id, @RequestBody StatusRequest statusRequest) {
         tourService.changeTourStatus(id, statusRequest);
-        return  ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/featured")
     public ResponseEntity<ApiResponse<Void>> changeToursFeatured(
             @PathVariable Long id, @RequestBody FeaturedRequest featuredRequest) {
         tourService.changeTourFeatured(id, featuredRequest);
-        return  ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/details/{tourDetailsId}")
     public ResponseEntity<ApiResponse<Void>> changeToursDetailsStatus(
             @PathVariable Long tourDetailsId, @RequestBody ToursDetailsStatusRequest request) {
         tourService.changeToursDetailsStatus(tourDetailsId, request);
-        return  ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build();
     }
 }
