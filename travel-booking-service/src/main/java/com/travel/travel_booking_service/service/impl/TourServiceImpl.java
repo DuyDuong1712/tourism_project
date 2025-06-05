@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.dto.request.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,10 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.travel.travel_booking_service.dto.request.TourDetailRequest;
-import com.travel.travel_booking_service.dto.request.TourInfomationRequest;
-import com.travel.travel_booking_service.dto.request.TourRequest;
-import com.travel.travel_booking_service.dto.request.TourScheduleRequest;
 import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
 import com.travel.travel_booking_service.dto.response.TourResponse;
 import com.travel.travel_booking_service.entity.*;
@@ -38,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TourServiceImpl implements TourService {
+
 
     TourRepository tourRepository;
     CategoryRepository categoryRepository;
@@ -197,22 +195,29 @@ public class TourServiceImpl implements TourService {
         List<TourResponse> tourResponses = new ArrayList<>();
 
         for (Tour tour : tourProjections) {
-            TourResponse tourResponse = new TourResponse();
-            tourResponse.setId(tour.getId());
-            tourResponse.setTitle(tour.getTitle());
-            tourResponse.setDescription(tour.getDescription());
-            tourResponse.setInActive(tour.getInActive());
-            tourResponse.setIsFeatured(tour.getIsFeatured());
+            // Lấy trước danh sách ảnh tour
+            List<String> tourImageUrls = tourImageRepository
+                    .getByTour_Id(tour.getId())
+                    .stream()
+                    .map(TourImage::getCloudinaryUrl)
+                    .collect(Collectors.toList());
 
-            // Set tour images
-            List<TourImage> tourImages = tourImageRepository.getByTour_Id(tour.getId());
-            tourResponse.setTourImages(
-                    tourImages.stream().map(img -> img.getCloudinaryUrl()).collect(Collectors.toList()));
-
+            // Lấy danh sách các chi tiết tour (TourDetail)
             List<TourDetail> tourDetails = tourDetailRepository.findByTour_Id(tour.getId());
 
             for (TourDetail tourDetail : tourDetails) {
-                // Set tour details
+                TourResponse tourResponse = new TourResponse();
+
+                // Gán thông tin từ tour
+                tourResponse.setId(tour.getId());
+                tourResponse.setTitle(tour.getTitle());
+                tourResponse.setDescription(tour.getDescription());
+                tourResponse.setInActive(tour.getInActive());
+                tourResponse.setIsFeatured(tour.getIsFeatured());
+                tourResponse.setTourImages(tourImageUrls);
+
+                // Gán thông tin từ tourDetail
+                tourResponse.setTourDetailsId(tourDetail.getId());
                 tourResponse.setStatus(tourDetail.getStatus().name());
                 tourResponse.setAdultPrice(tourDetail.getAdultPrice());
                 tourResponse.setChildrenPrice(tourDetail.getChildrenPrice());
@@ -223,15 +228,16 @@ public class TourServiceImpl implements TourService {
                 tourResponse.setRemainingSlots(tourDetail.getRemainingSlots());
                 tourResponse.setDayStart(tourDetail.getDayStart());
                 tourResponse.setDayReturn(tourDetail.getDayReturn());
+
+
+                // Gán các thực thể liên quan
+                tourResponse.setCategory(tour.getCategory().getName());
+                tourResponse.setDeparture(tour.getDeparture().getName());
+                tourResponse.setDestination(tour.getDestination().getName());
+                tourResponse.setTransportation(tour.getTransport().getName());
+
+                tourResponses.add(tourResponse);
             }
-
-            // Set related entity names
-            tourResponse.setCategory(tour.getCategory().getName());
-            tourResponse.setDeparture(tour.getDeparture().getName());
-            tourResponse.setDestination(tour.getDestination().getName());
-            tourResponse.setTransportation(tour.getTransport().getName());
-
-            tourResponses.add(tourResponse);
         }
         return tourResponses;
     }
@@ -252,7 +258,13 @@ public class TourServiceImpl implements TourService {
     }
 
     @Override
-    public void deleteTour(Long id) {}
+    public void deleteTour(Long id) {
+        Tour tour =
+                tourRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+
+
+        tourRepository.delete(tour);
+    }
 
     @Override
     public List<TourResponse> searchTours(String keyword) {
@@ -268,88 +280,25 @@ public class TourServiceImpl implements TourService {
     public List<TourResponse> getToursByDestination(Long destinationId) {
         return List.of();
     }
-    //    TourRepository tourRepository;
-    //
-    //    @Override
-    //    @Transactional
-    //    public TourResponse createTour(TourRequest request) {
-    //        Tour tour = Tour.builder()
-    //                .name(request.getName())
-    //                .description(request.getDescription())
-    //                .price(request.getPrice())
-    //                .duration(request.getDuration())
-    //                .categoryId(request.getCategoryId())
-    //                .destinationId(request.getDestinationId())
-    //                .build();
-    //
-    //        return convertToResponse(tourRepository.save(tour));
-    //    }
-    //
-    //    @Override
-    //    public List<TourResponse> getAllTours() {
-    //        return tourRepository.findAll().stream()
-    //                .map(this::convertToResponse)
-    //                .collect(Collectors.toList());
-    //    }
-    //
-    //    @Override
-    //    public TourResponse getTourById(Long id) {
-    //        return convertToResponse(tourRepository.findById(id)
-    //                .orElseThrow(() -> new RuntimeException("Tour not found")));
-    //    }
-    //
-    //    @Override
-    //    @Transactional
-    //    public TourResponse updateTour(Long id, TourRequest request) {
-    //        Tour tour = tourRepository.findById(id)
-    //                .orElseThrow(() -> new RuntimeException("Tour not found"));
-    //
-    //        tour.setName(request.getName());
-    //        tour.setDescription(request.getDescription());
-    //        tour.setPrice(request.getPrice());
-    //        tour.setDuration(request.getDuration());
-    //        tour.setCategoryId(request.getCategoryId());
-    //        tour.setDestinationId(request.getDestinationId());
-    //
-    //        return convertToResponse(tourRepository.save(tour));
-    //    }
-    //
-    //    @Override
-    //    @Transactional
-    //    public void deleteTour(Long id) {
-    //        tourRepository.deleteById(id);
-    //    }
-    //
-    //    @Override
-    //    public List<TourResponse> searchTours(String keyword) {
-    //        return tourRepository.searchTours(keyword).stream()
-    //                .map(this::convertToResponse)
-    //                .collect(Collectors.toList());
-    //    }
-    //
-    //    @Override
-    //    public List<TourResponse> getToursByCategory(Long categoryId) {
-    //        return tourRepository.findByCategoryId(categoryId).stream()
-    //                .map(this::convertToResponse)
-    //                .collect(Collectors.toList());
-    //    }
-    //
-    //    @Override
-    //    public List<TourResponse> getToursByDestination(Long destinationId) {
-    //        return tourRepository.findByDestinationId(destinationId).stream()
-    //                .map(this::convertToResponse)
-    //                .collect(Collectors.toList());
-    //    }
-    //
-    //    private TourResponse convertToResponse(Tour tour) {
-    //        return TourResponse.builder()
-    //                .id(tour.getId())
-    //                .name(tour.getName())
-    //                .description(tour.getDescription())
-    //                .price(tour.getPrice())
-    //                .duration(tour.getDuration())
-    //                .categoryId(tour.getCategoryId())
-    //                .destinationId(tour.getDestinationId())
-    //                .build();
-    //    }
+
+    @Override
+    public void changeTourStatus(Long id, StatusRequest statusRequest) {
+        Tour tour =
+                tourRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+        tour.setInActive(statusRequest.getInActive());
+    }
+
+    @Override
+    public void changeTourFeatured(Long id, FeaturedRequest featuredRequest) {
+        Tour tour =
+                tourRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+        tour.setIsFeatured(featuredRequest.getIsFeatured());
+    }
+
+    @Override
+    public void changeToursDetailsStatus(Long TourDetailId, ToursDetailsStatusRequest request) {
+        TourDetail tourDetail = tourDetailRepository.findById(TourDetailId).orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+        tourDetail.setStatus(TourDetailStatus.valueOf(request.getStatus()));
+        tourDetailRepository.save(tourDetail);
+    }
 }

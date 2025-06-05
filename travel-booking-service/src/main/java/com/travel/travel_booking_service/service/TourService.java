@@ -2,6 +2,9 @@ package com.travel.travel_booking_service.service;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.request.FeaturedRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.dto.request.ToursDetailsStatusRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -39,4 +42,9 @@ public interface TourService {
     List<TourResponse> getToursByCategory(Long categoryId);
 
     List<TourResponse> getToursByDestination(Long destinationId);
+
+    void changeTourStatus(Long id, StatusRequest statusRequest);
+    void changeTourFeatured(Long id, FeaturedRequest featuredRequest);
+    void changeToursDetailsStatus(Long TourDetailId, ToursDetailsStatusRequest request);
+
 }

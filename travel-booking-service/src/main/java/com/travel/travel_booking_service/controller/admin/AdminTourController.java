@@ -2,6 +2,10 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.request.FeaturedRequest;
+import com.travel.travel_booking_service.dto.request.StatusRequest;
+import com.travel.travel_booking_service.dto.request.ToursDetailsStatusRequest;
+import com.travel.travel_booking_service.dto.response.DestinationResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -96,5 +100,26 @@ public class AdminTourController {
                 .body(ApiResponse.<List<TourResponse>>builder()
                         .data(tourService.searchTours(keyword))
                         .build());
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<Void>> changeToursStatus(
+            @PathVariable Long id, @RequestBody StatusRequest statusRequest) {
+        tourService.changeTourStatus(id, statusRequest);
+        return  ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/featured")
+    public ResponseEntity<ApiResponse<Void>> changeToursFeatured(
+            @PathVariable Long id, @RequestBody FeaturedRequest featuredRequest) {
+        tourService.changeTourFeatured(id, featuredRequest);
+        return  ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/details/{tourDetailsId}")
+    public ResponseEntity<ApiResponse<Void>> changeToursDetailsStatus(
+            @PathVariable Long tourDetailsId, @RequestBody ToursDetailsStatusRequest request) {
+        tourService.changeToursDetailsStatus(tourDetailsId, request);
+        return  ResponseEntity.noContent().build();
     }
 }
