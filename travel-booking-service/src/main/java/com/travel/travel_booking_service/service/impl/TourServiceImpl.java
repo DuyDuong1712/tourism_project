@@ -3,37 +3,41 @@ package com.travel.travel_booking_service.service.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travel.travel_booking_service.dto.request.TourDetailRequest;
 import com.travel.travel_booking_service.dto.request.TourInfomationRequest;
+import com.travel.travel_booking_service.dto.request.TourRequest;
 import com.travel.travel_booking_service.dto.request.TourScheduleRequest;
 import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
-import com.travel.travel_booking_service.dto.response.TourDetailResponse;
+import com.travel.travel_booking_service.dto.response.TourResponse;
 import com.travel.travel_booking_service.entity.*;
 import com.travel.travel_booking_service.enums.ErrorCode;
+import com.travel.travel_booking_service.enums.TourDetailStatus;
 import com.travel.travel_booking_service.exception.AppException;
 import com.travel.travel_booking_service.mapper.TourMapper;
 import com.travel.travel_booking_service.repository.*;
-import com.travel.travel_booking_service.service.UploadImageFile;
-import org.springframework.stereotype.Service;
-
-import com.travel.travel_booking_service.dto.request.TourRequest;
-import com.travel.travel_booking_service.dto.response.TourResponse;
 import com.travel.travel_booking_service.service.TourService;
+import com.travel.travel_booking_service.service.UploadImageFile;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TourServiceImpl implements TourService {
-
 
     TourRepository tourRepository;
     CategoryRepository categoryRepository;
@@ -49,34 +53,43 @@ public class TourServiceImpl implements TourService {
     ObjectMapper objectMapper;
 
     @Override
-    public TourResponse createTour(String title,
-                                   Boolean isFeatured,
-                                   Long categoryId,
-                                   Long destinationId,
-                                   Long departureId,
-                                   Long transportationId,
-                                   String description,
-                                   String informationJson,
-                                   String scheduleJson,
-                                   String tourDetailJson,
-                                   List<MultipartFile> imageFiles) throws JsonProcessingException {
+    @Transactional
+    public TourResponse createTour(
+            String title,
+            Boolean isFeatured,
+            Long categoryId,
+            Long destinationId,
+            Long departureId,
+            Long transportationId,
+            String description,
+            String informationJson,
+            String scheduleJson,
+            String tourDetailJson,
+            List<MultipartFile> imageFiles)
+            throws JsonProcessingException {
 
         // Parse JSON thành các đối tượng Java
         TourInfomationRequest information = objectMapper.readValue(informationJson, TourInfomationRequest.class);
-        List<TourScheduleRequest> schedules = objectMapper.readValue(scheduleJson, new TypeReference<List<TourScheduleRequest>>() {});
-        List<TourDetailRequest> tourDetails = objectMapper.readValue(tourDetailJson, new TypeReference<List<TourDetailRequest>>() {});
+        List<TourScheduleRequest> schedules =
+                objectMapper.readValue(scheduleJson, new TypeReference<List<TourScheduleRequest>>() {});
+        List<TourDetailRequest> tourDetails =
+                objectMapper.readValue(tourDetailJson, new TypeReference<List<TourDetailRequest>>() {});
 
         // 1. Validate và lấy các entity liên quan
-        Category category = categoryRepository.findById(categoryId)
+        Category category = categoryRepository
+                .findById(categoryId)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        Departure departure = departureRepository.findById(departureId)
+        Departure departure = departureRepository
+                .findById(departureId)
                 .orElseThrow(() -> new AppException(ErrorCode.DEPARTURE_NOT_FOUND));
 
-        Destination destination = destinationRepository.findById(destinationId)
+        Destination destination = destinationRepository
+                .findById(destinationId)
                 .orElseThrow(() -> new AppException(ErrorCode.DESTINATION_NOT_FOUND));
 
-        Transport transportation = transportRepository.findById(transportationId)
+        Transport transportation = transportRepository
+                .findById(transportationId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSPORT_NOT_FOUND));
 
         // 2. Tạo đối tượng Tour
@@ -102,11 +115,10 @@ public class TourServiceImpl implements TourService {
                 .suitableObject(information.getSuitableObject())
                 .vehicle(information.getVehicle())
                 .build();
-
         tourInformationRepository.save(tourInfo);
 
-
         // 4. Lưu lịch trình (schedules)
+        List<TourSchedule> scheduleList = new ArrayList<>();
         for (TourScheduleRequest scheduleRequest : schedules) {
             TourSchedule schedule = TourSchedule.builder()
                     .day(scheduleRequest.getDay())
@@ -114,30 +126,38 @@ public class TourServiceImpl implements TourService {
                     .information(scheduleRequest.getInformation())
                     .tour(tour)
                     .build();
-            tourSchedulesRepository.save(schedule);
+            scheduleList.add(schedule);
         }
+        tourSchedulesRepository.saveAll(scheduleList);
 
         // 5. Lưu chi tiết tour (giá và ngày khởi hành)
+        List<TourDetail> details = new ArrayList<>();
         for (TourDetailRequest detailRequest : tourDetails) {
             TourDetail detail = TourDetail.builder()
                     .tour(tour)
                     .adultPrice(detailRequest.getAdultPrice())
-                    .childrenPrice(detailRequest.getChildrenPrice())
-                    .childPrice(detailRequest.getChildPrice())
-                    .babyPrice(detailRequest.getBabyPrice())
+                    .childrenPrice((detailRequest.getChildrenPrice() != null) ? detailRequest.getChildrenPrice() : 0)
+                    .childPrice((detailRequest.getChildPrice() != null) ? detailRequest.getChildPrice() : 0)
+                    .babyPrice((detailRequest.getBabyPrice() != null) ? detailRequest.getBabyPrice() : 0)
                     .stock(detailRequest.getStock())
                     .dayStart(detailRequest.getDayStart())
                     .dayReturn(detailRequest.getDayReturn())
+                    .status(TourDetailStatus.SCHEDULED)
+                    .singleRoomSupplementPrice(
+                            (detailRequest.getSingleRoomSupplementPrice() != null)
+                                    ? detailRequest.getSingleRoomSupplementPrice()
+                                    : 0)
                     .bookedSlots(0)
                     .build();
-            tourDetailRepository.save(detail);
+            details.add(detail);
         }
+        tourDetailRepository.saveAll(details);
 
         // 6. Upload ảnh
+        List<TourImage> tourImages = new ArrayList<>();
         if (imageFiles != null && !imageFiles.isEmpty()) {
             for (MultipartFile file : imageFiles) {
                 if (file != null && !file.isEmpty()) {
-
                     try {
                         CloudinaryUploadResponse cloudinaryUploadResponse = uploadImageFile.upLoadImage(file);
                         TourImage tourImage = TourImage.builder()
@@ -146,6 +166,7 @@ public class TourServiceImpl implements TourService {
                                 .cloudinaryUrl(cloudinaryUploadResponse.getUrl())
                                 .altText("Hình ảnh về " + tour.getTitle())
                                 .build();
+                        tourImages.add(tourImage);
                         tourImageRepository.save(tourImage);
                     } catch (IOException e) {
                         throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
@@ -154,6 +175,15 @@ public class TourServiceImpl implements TourService {
             }
         }
 
+        tour.setInActive(true);
+        tour.setTourInformation(tourInfo);
+        tour.setTourSchedules(scheduleList);
+        tour.setTourImages(tourImages);
+        tour.setTourDetails(details);
+
+        // Refresh tour entity để đảm bảo có data mới nhất
+        tourRepository.saveAndFlush(tourRepository.save(tour));
+
         TourResponse tourResponse = new TourResponse();
 
         // 7. Trả về response
@@ -161,14 +191,49 @@ public class TourServiceImpl implements TourService {
     }
 
     @Override
-    public List<TourDetailResponse> getAllToursWithDetails() {
-        List<Tour> toursWithDetail =  tourRepository.findAllWithTourDetails();
-        List<TourDetailResponse> tourDetailResponses = new ArrayList<>();
-        for (Tour tour : toursWithDetail) {
-            TourDetailResponse tourDetailResponse = new TourDetailResponse();
+    @Transactional(readOnly = true)
+    public List<TourResponse> getAllToursWithDetails() {
+        List<Tour> tourProjections = tourRepository.findAll();
+        List<TourResponse> tourResponses = new ArrayList<>();
 
+        for (Tour tour : tourProjections) {
+            TourResponse tourResponse = new TourResponse();
+            tourResponse.setId(tour.getId());
+            tourResponse.setTitle(tour.getTitle());
+            tourResponse.setDescription(tour.getDescription());
+            tourResponse.setInActive(tour.getInActive());
+            tourResponse.setIsFeatured(tour.getIsFeatured());
+
+            // Set tour images
+            List<TourImage> tourImages = tourImageRepository.getByTour_Id(tour.getId());
+            tourResponse.setTourImages(
+                    tourImages.stream().map(img -> img.getCloudinaryUrl()).collect(Collectors.toList()));
+
+            List<TourDetail> tourDetails = tourDetailRepository.findByTour_Id(tour.getId());
+
+            for (TourDetail tourDetail : tourDetails) {
+                // Set tour details
+                tourResponse.setStatus(tourDetail.getStatus().name());
+                tourResponse.setAdultPrice(tourDetail.getAdultPrice());
+                tourResponse.setChildrenPrice(tourDetail.getChildrenPrice());
+                tourResponse.setChildPrice(tourDetail.getChildPrice());
+                tourResponse.setBabyPrice(tourDetail.getBabyPrice());
+                tourResponse.setSlots(tourDetail.getStock());
+                tourResponse.setBookedSlots(tourDetail.getBookedSlots());
+                tourResponse.setRemainingSlots(tourDetail.getRemainingSlots());
+                tourResponse.setDayStart(tourDetail.getDayStart());
+                tourResponse.setDayReturn(tourDetail.getDayReturn());
+            }
+
+            // Set related entity names
+            tourResponse.setCategory(tour.getCategory().getName());
+            tourResponse.setDeparture(tour.getDeparture().getName());
+            tourResponse.setDestination(tour.getDestination().getName());
+            tourResponse.setTransportation(tour.getTransport().getName());
+
+            tourResponses.add(tourResponse);
         }
-        return List.of();
+        return tourResponses;
     }
 
     @Override

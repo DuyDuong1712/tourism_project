@@ -2,17 +2,15 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.travel.travel_booking_service.dto.request.TourDetailRequest;
-import com.travel.travel_booking_service.dto.request.TourInfomationRequest;
-import com.travel.travel_booking_service.dto.request.TourScheduleRequest;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.travel.travel_booking_service.dto.request.TourRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.TourResponse;
@@ -21,7 +19,6 @@ import com.travel.travel_booking_service.service.TourService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/admin/tours")
@@ -43,11 +40,12 @@ public class AdminTourController {
             @RequestParam("information") String informationJson,
             @RequestParam("schedule") String scheduleJson,
             @RequestParam("tour_detail") String tourDetailJson,
-            @RequestParam(value = "images", required = false) List<MultipartFile> imageFiles
-    ) throws JsonProcessingException {
+            @RequestParam(value = "images", required = false) List<MultipartFile> imageFiles)
+            throws JsonProcessingException {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<TourResponse>builder()
-                        .data(tourService.createTour(title,
+                        .data(tourService.createTour(
+                                title,
                                 isFeatured,
                                 categoryId,
                                 destinationId,
@@ -57,16 +55,15 @@ public class AdminTourController {
                                 informationJson,
                                 scheduleJson,
                                 tourDetailJson,
-                                imageFiles
-                        ))
+                                imageFiles))
                         .build());
     }
 
-    @GetMapping("tours-with-details")
-    public ResponseEntity<ApiResponse<List<TourResponse>>> getAllTours() {
+    @GetMapping("/tours-with-details")
+    public ResponseEntity<ApiResponse<List<TourResponse>>> getAllToursWithDetail() {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<List<TourResponse>>builder()
-                        .data(tourService.getAllTours())
+                        .data(tourService.getAllToursWithDetails())
                         .build());
     }
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.TransportRequest;
@@ -21,6 +22,7 @@ import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TransportServiceImpl implements TransportService {
 

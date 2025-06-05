@@ -1,7 +1,8 @@
 package com.travel.travel_booking_service.enums;
 
-public enum TripStatus {
+public enum TourDetailStatus {
     SCHEDULED,
+    CONFIRMED,
     IN_PROGRESS,
     COMPLETED,
     CANCELLED

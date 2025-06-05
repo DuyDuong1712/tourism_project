@@ -1,9 +1,9 @@
 package com.travel.travel_booking_service.service;
 
+import java.util.List;
+
 import com.travel.travel_booking_service.dto.request.TourRequest;
 import com.travel.travel_booking_service.dto.response.TourResponse;
-
-import java.util.List;
 
 public interface TourScheduleService {
     TourResponse createTourSchedule(TourRequest request);

@@ -2,6 +2,8 @@ package com.travel.travel_booking_service.entity;
 
 import jakarta.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -16,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 public class TourInformation extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tour_id", nullable = false, unique = true)
+    @JsonBackReference("tour-information")
     private Tour tour;
 
     @Column(name = "attractions", columnDefinition = "TEXT")
@@ -35,5 +38,4 @@ public class TourInformation extends BaseEntity {
 
     @Column(name = "vehicle", columnDefinition = "TEXT")
     private String vehicle;
-
 }

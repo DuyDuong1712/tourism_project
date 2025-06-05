@@ -3,6 +3,7 @@ package com.travel.travel_booking_service.service.impl;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.travel.travel_booking_service.dto.request.BookingRequest;
 import com.travel.travel_booking_service.dto.response.BookingResponse;
@@ -14,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookingServiceImpl implements BookingService {
     @Override

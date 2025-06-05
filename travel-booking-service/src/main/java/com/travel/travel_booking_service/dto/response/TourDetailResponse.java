@@ -1,32 +1,26 @@
 package com.travel.travel_booking_service.dto.response;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TourDetailResponse {
-    private Integer id;
-    private String title;
-    private List<String> tourImages;
-    private String status;
-    private Boolean inActive;
-    private Boolean isFeatured;
-    private Integer maxSlots;
-    private Boolean inActive;
-
-    // Category information
-    private Integer categoryId;
-    private String categoryName;
-
-    // Audit information
-    private LocalDateTime createdDate;
-    private LocalDateTime modifiedDate;
-    private String createdBy;
-    private String modifiedBy;
+    String status;
+    Long adultPrice;
+    Long childrenPrice;
+    Long childPrice;
+    Long babyPrice;
+    Integer slots;
+    Integer remainingSlots;
+    Integer bookedSlots;
+    LocalDateTime dayStart;
+    LocalDateTime dayReturn;
 }

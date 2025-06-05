@@ -102,22 +102,37 @@ INSERT INTO `categories` (`name`, `description`, `created_by`) VALUES
 ('GIÁ TỐT',	'Dòng tour có mức giá hấp dẫn nhất thị trường do kết hợp các ưu đãi từ Đối Tác Vàng của Vietravel... suốt hành trình là những trải nghiệm và điểm tham quan cơ bản tại từng điểm đến và dịch vụ trong mức tiêu chuẩn tương xứng và chi phí.', 'admin');
 
 -- 5. Dữ liệu cho bảng destinations
-INSERT INTO `destinations` (`name`, `code`, `description`, `created_by`) VALUES
-('Hà Nội', 'HN', 'Thủ đô ngàn năm văn hiến', 'admin'),
-('Hồ Chí Minh', 'HCM', 'Thành phố năng động nhất Việt Nam', 'admin'),
-('Đà Nẵng', 'DN', 'Thành phố đáng sống bên bờ biển', 'admin'),
-('Hạ Long', 'HL', 'Vịnh Hạ Long kỳ quan thế giới', 'admin'),
-('Sapa', 'SP', 'Thị trấn trong mây với ruộng bậc thang', 'admin'),
-('Hội An', 'HO', 'Phố cổ với kiến trúc độc đáo', 'admin'),
-('Phú Quốc', 'PQ', 'Đảo ngọc của Việt Nam', 'admin'),
-('Nha Trang', 'NT', 'Thành phố biển xinh đẹp', 'admin'),
-('Đà Lạt', 'DL', 'Thành phố ngàn hoa', 'admin');
+INSERT INTO `destinations` (`id`, `parent_id`, `name`, `code`, `description`, `image`, `in_active`, `created_by`)
+VALUES 
+(1, NULL, 'Trong nước', 'VN', 'Các điểm đến nội địa', NULL, 1, 'admin'),
+(2, NULL, 'Ngoài nước', 'INT', 'Các điểm đến quốc tế', NULL, 1, 'admin');
+
+-- Cấp 2: Các quốc gia/khu vực
+INSERT INTO `destinations` (`id`, `parent_id`, `name`, `code`, `description`, `image`, `in_active`, `created_by`)
+VALUES 
+(3, 1, 'Miền Bắc', 'VN-BAC', 'Miền Bắc Việt Nam', NULL, 1, 'admin'),
+(4, 1, 'Miền Trung', 'VN-TRUNG', 'Miền Trung Việt Nam', NULL, 1, 'admin'),
+(5, 1, 'Miền Nam', 'VN-NAM', 'Miền Nam Việt Nam', NULL, 1, 'admin'),
+(6, 2, 'Châu Âu', 'EU', 'Khu vực Châu Âu', NULL, 1, 'admin'),
+(7, 2, 'Châu Á', 'ASIA', 'Khu vực Châu Á', NULL, 1, 'admin');
+
+-- Cấp 3: Các tỉnh thành (trực thuộc khu vực)
+INSERT INTO `destinations` (`parent_id`, `name`, `code`, `description`, `image`, `in_active`, `created_by`)
+VALUES
+(3, 'Hà Nội', 'VN-HN', 'Thủ đô Việt Nam', NULL, 1, 'admin'),
+(3, 'Lào Cai', 'VN-LC', 'Nơi có Sapa nổi tiếng', NULL, 1, 'admin'),
+(4, 'Đà Nẵng', 'VN-DN', 'Thành phố biển nổi tiếng', NULL, 1, 'admin'),
+(5, 'TP.Hồ Chí Minh', 'VN-HCM', 'Trung tâm kinh tế phía Nam', NULL, 1, 'admin'),
+(6, 'Pháp', 'FR', 'Điểm đến phổ biến ở Châu Âu', NULL, 1, 'admin'),
+(6, 'Đức', 'DE', 'Đất nước có lâu đài cổ kính', NULL, 1, 'admin'),
+(7, 'Thái Lan', 'TH', 'Thiên đường du lịch Đông Nam Á', NULL, 1, 'admin'),
+(7, 'Nhật Bản', 'JP', 'Đất nước hoa anh đào', NULL, 1, 'admin');
 
 -- 6. Dữ liệu cho bảng departures
 INSERT INTO `departures` (`name`, `code`, `address`, `created_by`) VALUES
 ('Hà Nội', 'HN_DEP', '123 Đường Láng, Đống Đa, Hà Nội', 'admin'),
 ('Hồ Chí Minh', 'HCM_DEP', '456 Nguyễn Huệ, Quận 1, TP.HCM', 'admin'),
-('Đà Nẵng', 'DN_DEP' '789 Bạch Đằng, Hải Châu, Đà Nẵng', 'admin');
+('Đà Nẵng', 'DN_DEP','789 Bạch Đằng, Hải Châu, Đà Nẵng', 'admin');
 
 -- 7. Dữ liệu cho bảng transports
 INSERT INTO `transports` (`name`, `type`, `brand`, `description`, `created_by`) VALUES

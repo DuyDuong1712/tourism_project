@@ -13,7 +13,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.*;
 
 @MappedSuperclass
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)

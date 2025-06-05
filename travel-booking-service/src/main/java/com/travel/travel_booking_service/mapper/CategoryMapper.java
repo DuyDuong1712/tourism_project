@@ -1,6 +1,7 @@
 package com.travel.travel_booking_service.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
 import com.travel.travel_booking_service.dto.request.CategoryRequest;
@@ -13,5 +14,6 @@ public interface CategoryMapper {
 
     void updateCategory(@MappingTarget Category category, CategoryRequest request);
 
+    @Mapping(target = "tours", ignore = true)
     CategoryResponse toCategoryResponse(Category category);
 }
