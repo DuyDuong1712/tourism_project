@@ -15,23 +15,43 @@ public interface TourRepository extends JpaRepository<Tour, Long> {
 
     List<Tour> findByTourDetails(List<TourDetail> tourDetails);
 
-    @Query(
-            """
-		SELECT t FROM Tour t
-		WHERE (:destinationId IS NULL OR t.destination.id = :destinationId)
-		AND (:departureId IS NULL OR t.departure.id = :departureId)
-		AND (:transportationId IS NULL OR t.transport.id = :transportationId)
-		AND (:categoryId IS NULL OR t.category.id = :categoryId)
-		AND (:inActive IS NULL OR t.inActive = :inActive)
-		AND (:isFeatured IS NULL OR t.isFeatured = :isFeatured)
-		AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%')))
-	""")
-    List<Tour> findAllFiltered(
-            @Param("destinationId") Long destinationId,
-            @Param("departureId") Long departureId,
-            @Param("transportationId") Long transportationId,
-            @Param("categoryId") Long categoryId,
-            @Param("inActive") Boolean inActive,
-            @Param("isFeatured") Boolean isFeatured,
-            @Param("title") String title);
+	@Query("""
+    SELECT t FROM Tour t
+    WHERE (:destinationIds IS NULL OR t.destination.id IN :destinationIds)
+    AND (:departureId IS NULL OR t.departure.id = :departureId)
+    AND (:transportationId IS NULL OR t.transport.id = :transportationId)
+    AND (:categoryId IS NULL OR t.category.id = :categoryId)
+    AND (:inActive IS NULL OR t.inActive = :inActive)
+    AND (:isFeatured IS NULL OR t.isFeatured = :isFeatured)
+    AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%')))
+""")
+	List<Tour> findAllFiltered(
+			@Param("destinationIds") List<Long> destinationIds,
+			@Param("departureId") Long departureId,
+			@Param("transportationId") Long transportationId,
+			@Param("categoryId") Long categoryId,
+			@Param("inActive") Boolean inActive,
+			@Param("isFeatured") Boolean isFeatured,
+			@Param("title") String title);
+
+
+//    @Query(
+//            """
+//		SELECT t FROM Tour t
+//		WHERE (:destinationId IS NULL OR t.destination.id = :destinationId)
+//		AND (:departureId IS NULL OR t.departure.id = :departureId)
+//		AND (:transportationId IS NULL OR t.transport.id = :transportationId)
+//		AND (:categoryId IS NULL OR t.category.id = :categoryId)
+//		AND (:inActive IS NULL OR t.inActive = :inActive)
+//		AND (:isFeatured IS NULL OR t.isFeatured = :isFeatured)
+//		AND (:title IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :title, '%')))
+//	""")
+//    List<Tour> findAllFiltered(
+//            @Param("destinationId") Long destinationId,
+//            @Param("departureId") Long departureId,
+//            @Param("transportationId") Long transportationId,
+//            @Param("categoryId") Long categoryId,
+//            @Param("inActive") Boolean inActive,
+//            @Param("isFeatured") Boolean isFeatured,
+//            @Param("title") String title);
 }

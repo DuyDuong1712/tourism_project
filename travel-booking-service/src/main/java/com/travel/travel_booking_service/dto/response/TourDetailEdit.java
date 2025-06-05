@@ -18,6 +18,8 @@ public class TourDetailEdit {
     private Long babyPrice;
     private Long singleRoomSupplementPrice;
     private Integer stock; // Changed to String to match JSON
+    private Integer bookedSlots;
+    private Integer remainingSlots;
     private Integer discount; // Changed to String to match JSON
     private LocalDateTime dayStart;
     private LocalDateTime dayReturn;

@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.service;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.response.TourDetailViewResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -41,7 +42,7 @@ public interface TourService {
     // Lấy tất cả tour  + detail của tour đó
     List<TourDetailResponse> getAllToursWithDetails();
 
-    List<TourDetailResponse> getTourDetailsByTourId(Long id);
+    TourDetailViewResponse getTourDetailsViewByTourId(Long id);
 
     TourEditResponse getTourById(Long id);
 

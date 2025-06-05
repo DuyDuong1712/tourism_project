@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.response.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,10 +13,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.travel.travel_booking_service.dto.request.FeaturedRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.ToursDetailsStatusRequest;
-import com.travel.travel_booking_service.dto.response.ApiResponse;
-import com.travel.travel_booking_service.dto.response.TourDetailResponse;
-import com.travel.travel_booking_service.dto.response.TourEditResponse;
-import com.travel.travel_booking_service.dto.response.TourResponse;
 import com.travel.travel_booking_service.service.TourService;
 
 import lombok.AccessLevel;
@@ -85,11 +82,11 @@ public class AdminTourController {
                         .build());
     }
 
-    @GetMapping("/tours/{id}/details")
-    public ResponseEntity<ApiResponse<List<TourDetailResponse>>> getTourDetails(@PathVariable Long id) {
+    @GetMapping("/{id}/details")
+    public ResponseEntity<ApiResponse<TourDetailViewResponse>> getTourDetails(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<List<TourDetailResponse>>builder()
-                        .data(tourService.getTourDetailsByTourId(id))
+                .body(ApiResponse.<TourDetailViewResponse>builder()
+                        .data(tourService.getTourDetailsViewByTourId(id))
                         .build());
     }
 
