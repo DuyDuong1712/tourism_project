@@ -19,6 +19,8 @@ public interface DestinationService {
 
     List<DestinationResponse> getAllDestinations();
 
+    List<DestinationResponse> getAllActiveDestinations();
+
     DestinationResponse changeDestinationStatus(Long id, StatusRequest statusRequest);
 
     DestinationResponse getDestinationById(Long id);

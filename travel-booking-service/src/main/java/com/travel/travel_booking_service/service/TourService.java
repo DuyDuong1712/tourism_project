@@ -1,17 +1,15 @@
 package com.travel.travel_booking_service.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.response.TourDetailViewResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.travel.travel_booking_service.dto.request.FeaturedRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.ToursDetailsStatusRequest;
-import com.travel.travel_booking_service.dto.response.TourDetailResponse;
-import com.travel.travel_booking_service.dto.response.TourEditResponse;
-import com.travel.travel_booking_service.dto.response.TourResponse;
+import com.travel.travel_booking_service.dto.response.*;
 
 public interface TourService {
     TourResponse createTour(
@@ -30,6 +28,17 @@ public interface TourService {
 
     List<TourResponse> getAllTours();
 
+    List<CustomerTourSearchResponse> getAllActiveToursWithFilter(
+            Integer departureId, Integer budgetId, Integer categoryId, Integer transTypeId, LocalDate fromDate);
+
+    List<CustomerTourSearchResponse> getAllActiveToursWithFilterWithSlug(
+            String slug,
+            Integer departureId,
+            Integer budgetId,
+            Integer categoryId,
+            Integer transTypeId,
+            LocalDate fromDate);
+
     List<TourResponse> getAllToursFiltered(
             Long destinationId,
             Long departureId,
@@ -43,6 +52,8 @@ public interface TourService {
     List<TourDetailResponse> getAllToursWithDetails();
 
     TourDetailViewResponse getTourDetailsViewByTourId(Long id);
+
+    CustomerTourViewResponse getTourDetails(Long id);
 
     TourEditResponse getTourById(Long id);
 

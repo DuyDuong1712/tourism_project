@@ -7,26 +7,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.travel.travel_booking_service.dto.response.ApiResponse;
-import com.travel.travel_booking_service.dto.response.CategoryResponse;
-import com.travel.travel_booking_service.service.CategoryService;
+import com.travel.travel_booking_service.dto.response.DepartureResponse;
+import com.travel.travel_booking_service.service.DepartureService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/api/departures")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class CategoryController {
+// @PreAuthorize("hasRole('ADMIN')")
+public class DepartureController {
 
-    CategoryService categoryService;
+    DepartureService departureService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getAllActiveCategories() {
+    public ResponseEntity<ApiResponse<List<DepartureResponse>>> getAllActiveDeparture() {
+        List<DepartureResponse> departures = departureService.getAllActiveDeparture();
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<List<CategoryResponse>>builder()
-                        .data(categoryService.getAllActiveCategories())
+                .body(ApiResponse.<List<DepartureResponse>>builder()
+                        .data(departures)
                         .build());
     }
 }

@@ -1,17 +1,26 @@
 package com.travel.travel_booking_service.service.impl;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.net.URLDecoder;
+
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,6 +37,7 @@ import com.travel.travel_booking_service.repository.*;
 import com.travel.travel_booking_service.service.TourService;
 import com.travel.travel_booking_service.service.UploadImageFile;
 
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -39,6 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TourServiceImpl implements TourService {
+
 
     TourRepository tourRepository;
     CategoryRepository categoryRepository;
@@ -216,7 +227,283 @@ public class TourServiceImpl implements TourService {
         return tourResponses;
     }
 
-    //Hàm lấy tất cả các destination con nếu có trong destination
+    @Override
+    public List<CustomerTourSearchResponse> getAllActiveToursWithFilter(
+            Integer departureId, Integer budgetId, Integer categoryId, Integer transTypeId, LocalDate fromDate) {
+        Specification<Tour> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Lọc các tour đang hoạt động
+            predicates.add(criteriaBuilder.equal(root.get("inActive"), true));
+
+            // Lọc theo departureId nếu có
+            if (departureId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("departure").get("id"), departureId));
+            }
+
+            // Lọc theo categoryId nếu có
+            if (categoryId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+            }
+
+            // Lọc theo transTypeId nếu có
+            if (transTypeId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("transport").get("id"), transTypeId));
+            }
+
+            // Lọc theo budgetId (liên quan đến adultPrice trong TourDetail)
+            if (budgetId != null) {
+                Join<Tour, TourDetail> tourDetailJoin = root.join("tourDetails", JoinType.INNER);
+                // budgetId ánh xạ đến một khoảng giá
+                predicates.add(criteriaBuilder.between(
+                        tourDetailJoin.get("adultPrice"), getBudgetRangeMin(budgetId), getBudgetRangeMax(budgetId)));
+            }
+
+            // Lọc theo fromDate nếu có
+            if (fromDate != null) {
+                Join<Tour, TourDetail> tourDetailJoin = root.join("tourDetails", JoinType.INNER);
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), fromDate.atStartOfDay()));
+                // Chỉ lấy các tour có trạng thái hợp lệ (scheduled, confirmed, in_progress)
+                predicates.add(tourDetailJoin
+                        .get("status")
+                        .in(TourDetailStatus.SCHEDULED, TourDetailStatus.CONFIRMED, TourDetailStatus.IN_PROGRESS));
+            }
+
+            // Đảm bảo truy vấn trả về các kết quả khác nhau
+            query.distinct(true);
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<Tour> tours = tourRepository.findAll(specification);
+
+        return tours.stream()
+                .map(tour -> {
+                    CustomerTourSearchResponse response = new CustomerTourSearchResponse();
+
+                    response.setId(tour.getId());
+                    response.setTitle(tour.getTitle());
+                    response.setDestination(tour.getDestination().getName());
+                    response.setTransportation(tour.getTransport().getName());
+                    response.setDeparture(tour.getDeparture().getName());
+                    response.setCategory(tour.getCategory().getName());
+
+                    List<String> dayStarts = new ArrayList<>();
+                    // Ánh xạ thêm thông tin từ TourDetail nếu cần
+                    if (!tour.getTourDetails().isEmpty()) {
+                        TourDetail latestDetail = tour.getTourDetails().stream()
+                                .filter(detail -> fromDate == null
+                                        || !detail.getDayStart().toLocalDate().isBefore(fromDate))
+                                .findFirst()
+                                .orElse(null);
+                        if (latestDetail != null) {
+                            response.setPrice(latestDetail.getAdultPrice());
+                            response.setDuration(Long.toString(ChronoUnit.DAYS.between(latestDetail.getDayStart(), latestDetail.getDayReturn())));
+                            dayStarts.add(latestDetail.getDayStart().toString());
+                        }
+                    }
+                    response.setDayStarts(dayStarts);
+                    // Ánh xạ thêm ảnh chính nếu có
+                    if (!tour.getTourImages().isEmpty()) {
+                        response.setTourImages(tour.getTourImages().get(0).getCloudinaryUrl());
+                    }
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CustomerTourSearchResponse> getAllActiveToursWithFilterWithSlug(
+            String slug,
+            Integer departureId,
+            Integer budgetId,
+            Integer categoryId,
+            Integer transTypeId,
+            LocalDate fromDate) {
+        Specification<Tour> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Lọc các tour đang hoạt động
+            predicates.add(criteriaBuilder.equal(root.get("inActive"), true));
+
+            // Lọc theo slug nếu có
+            if (StringUtils.hasText(slug)) {
+                System.out.println("Slug received: " + slug);
+
+                try {
+                    String decodedSlug = URLDecoder.decode(slug, StandardCharsets.UTF_8.name())
+                            .toLowerCase()
+                            .trim()
+                            .replaceAll("\\.", " ");
+                    System.out.println("decodedSlug: " + decodedSlug);
+
+                    // Normalize the slug for comparison
+                    String normalizedSlug = decodedSlug.toLowerCase().trim();
+                    System.out.println("normalizedSlug: " + normalizedSlug);
+
+                    Join<Tour, Destination> destinationJoin = root.join("destination", JoinType.INNER);
+
+                    predicates.add(criteriaBuilder.like(
+                            criteriaBuilder.lower(destinationJoin.get("name")), "%" + decodedSlug.toLowerCase() + "%"));
+                } catch (UnsupportedEncodingException e) {
+                    System.err.println("Error decoding slug: " + e.getMessage());
+                    throw new RuntimeException(e);
+                }
+            }
+
+            // Lọc theo departureId nếu có
+            if (departureId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("departure").get("id"), departureId));
+            }
+
+            // Lọc theo categoryId nếu có
+            if (categoryId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("category").get("id"), categoryId));
+            }
+
+            // Lọc theo transTypeId nếu có
+            if (transTypeId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("transport").get("id"), transTypeId));
+            }
+
+            // Lọc theo budgetId (liên quan đến adultPrice trong TourDetail)
+            if (budgetId != null) {
+                Join<Tour, TourDetail> tourDetailJoin = root.join("tourDetails", JoinType.INNER);
+                // budgetId ánh xạ đến một khoảng giá
+                predicates.add(criteriaBuilder.between(
+                        tourDetailJoin.get("adultPrice"), getBudgetRangeMin(budgetId), getBudgetRangeMax(budgetId)));
+            }
+
+            // Lọc theo fromDate nếu có
+            if (fromDate != null) {
+                Join<Tour, TourDetail> tourDetailJoin = root.join("tourDetails", JoinType.INNER);
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), fromDate.atStartOfDay()));
+                // Chỉ lấy các tour có trạng thái hợp lệ (scheduled, confirmed, in_progress)
+                predicates.add(tourDetailJoin
+                        .get("status")
+                        .in(TourDetailStatus.SCHEDULED, TourDetailStatus.CONFIRMED, TourDetailStatus.IN_PROGRESS));
+            }
+
+            // Đảm bảo truy vấn trả về các kết quả khác nhau
+            query.distinct(true);
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        List<Tour> tours = tourRepository.findAll(specification);
+
+        return tours.stream()
+                .map(tour -> {
+                    CustomerTourSearchResponse response = new CustomerTourSearchResponse();
+
+                    response.setId(tour.getId());
+                    response.setTitle(tour.getTitle());
+                    response.setDestination(tour.getDestination().getName());
+                    response.setTransportation(tour.getTransport().getName());
+                    response.setDeparture(tour.getDeparture().getName());
+                    response.setCategory(tour.getCategory().getName());
+
+                    List<String> dayStarts = new ArrayList<>();
+                    // Ánh xạ thêm thông tin từ TourDetail nếu cần
+                    if (!tour.getTourDetails().isEmpty()) {
+                        TourDetail latestDetail = tour.getTourDetails().stream()
+                                .filter(detail -> fromDate == null
+                                        || !detail.getDayStart().toLocalDate().isBefore(fromDate))
+                                .findFirst()
+                                .orElse(null);
+                        if (latestDetail != null) {
+                            response.setPrice(latestDetail.getAdultPrice());
+                            response.setDuration(Long.toString(ChronoUnit.DAYS.between(latestDetail.getDayStart(), latestDetail.getDayReturn())));
+                            dayStarts.add(latestDetail.getDayStart().toString());
+                        }
+                    }
+                    response.setDayStarts(dayStarts);
+                    // Ánh xạ thêm ảnh chính nếu có
+                    if (!tour.getTourImages().isEmpty()) {
+                        response.setTourImages(tour.getTourImages().get(0).getCloudinaryUrl());
+                    }
+                    return response;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CustomerTourViewResponse getTourDetails(Long id) {
+        Tour tour = tourRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
+
+        CustomerTourViewResponse response = new CustomerTourViewResponse();
+        response.setId(tour.getId());
+        response.setTitle(tour.getTitle());
+        response.setDescription(tour.getDescription());
+
+
+        List<TourImage> tourImages = tour.getTourImages();
+        List<TourImageResponse> tourImageResponses = new ArrayList<>();
+        for (TourImage tourImage : tourImages) {
+            TourImageResponse tourImageResponse = new TourImageResponse();
+            tourImageResponse.setId(tourImage.getId());
+            tourImageResponse.setTourId(tour.getId());
+            tourImageResponse.setImageUrl(tourImage.getCloudinaryUrl());
+            tourImageResponses.add(tourImageResponse);
+        }
+        response.setTourImages(tourImageResponses);
+
+        List<TourDetail> tourDetails = tour.getTourDetails();
+        List<CustomerTourDetail> customerTourDetails = new ArrayList<>();
+        for (TourDetail tourDetail : tourDetails) {
+            CustomerTourDetail customerTourDetail = CustomerTourDetail.builder()
+                    .id(tourDetail.getId())
+                    .adultPrice(tourDetail.getAdultPrice())
+                    .childrenPrice(tourDetail.getChildrenPrice())
+                    .childPrice(tourDetail.getChildPrice())
+                    .babyPrice(tourDetail.getBabyPrice())
+                    .singleRoomSupplementPrice(tourDetail.getSingleRoomSupplementPrice())
+                    .stock(tourDetail.getStock())
+                    .bookedSlots(tourDetail.getBookedSlots())
+                    .remainingSlots(tourDetail.getRemainingSlots())
+                    .discount(tourDetail.getDiscountPercent())
+                    .dayStart(tourDetail.getDayStart())
+                    .dayReturn(tourDetail.getDayReturn())
+                    .duration(ChronoUnit.DAYS.between(tourDetail.getDayStart(), tourDetail.getDayReturn()))
+                    .build();
+
+            customerTourDetails.add(customerTourDetail);
+        }
+        response.setTourDetails(customerTourDetails);
+
+        TourInformation tourInformation = tour.getTourInformation();
+        TourInformationResponse tourInformationResponse = TourInformationResponse.builder()
+                .id(tourInformation.getId())
+                .TourId(id)
+                .attractions(tourInformation.getAttractions())
+                .cuisine(tourInformation.getCuisine())
+                .idealTime(tourInformation.getIdealTime())
+                .vehicle(tourInformation.getVehicle())
+                .promotion(tourInformation.getPromotion())
+                .suitableObject(tourInformation.getSuitableObject())
+                .build();
+        response.setTourInformation(tourInformationResponse);
+
+        List<TourSchedule> tourSchedules = tour.getTourSchedules();
+        List<TourScheduleResponse> tourScheduleResponses = new ArrayList<>();
+        for (TourSchedule tourSchedule : tourSchedules) {
+            TourScheduleResponse tourScheduleResponse = new TourScheduleResponse();
+            tourScheduleResponse.setId(tourSchedule.getId());
+            tourScheduleResponse.setTourId(id);
+            tourScheduleResponse.setDay(tourSchedule.getDay());
+            tourScheduleResponse.setTitle(tourSchedule.getTitle());
+            tourScheduleResponse.setInformation(tourSchedule.getInformation());
+            tourScheduleResponses.add(tourScheduleResponse);
+        }
+        response.setTourSchedules(tourScheduleResponses);
+
+        return response;
+    }
+
+
+    // Hàm lấy tất cả các destination con nếu có trong destination
     public List<Long> getAllDestinationIds(Long parentId) {
         List<Long> ids = new ArrayList<>();
         collectAllDestinationIds(parentId, ids);
@@ -333,7 +620,6 @@ public class TourServiceImpl implements TourService {
         List<TourDetail> tourDetails = tour.getTourDetails();
         List<TourImage> tourImages = tour.getTourImages();
 
-
         // Lấy thông tin cơ bản của tour
         tourDetailViewResponse.setTitle(tour.getTitle());
         tourDetailViewResponse.setCategory(tour.getCategory().getName());
@@ -343,7 +629,6 @@ public class TourServiceImpl implements TourService {
         tourDetailViewResponse.setDescription(tour.getDescription());
         tourDetailViewResponse.setCreatedBy(tour.getCreatedBy());
         tourDetailViewResponse.setInActive(tour.getInActive());
-
 
         // Lấy thong tin trong tour-info
         TourInformationResponse tourInformationResponse = new TourInformationResponse();
@@ -526,7 +811,11 @@ public class TourServiceImpl implements TourService {
                 objectMapper.readValue(tourDetailJson, new TypeReference<List<TourDetailRequest>>() {});
 
         // Kiểm tra JSON
-        if (information == null || schedules == null || tourDetails == null || schedules.isEmpty() || tourDetails.isEmpty()) {
+        if (information == null
+                || schedules == null
+                || tourDetails == null
+                || schedules.isEmpty()
+                || tourDetails.isEmpty()) {
             throw new AppException(ErrorCode.INVALID_JSON_DATA);
         }
 
@@ -535,21 +824,24 @@ public class TourServiceImpl implements TourService {
                 .findById(categoryId)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
         if (category instanceof HibernateProxy) {
-            category = (Category) ((HibernateProxy) category).getHibernateLazyInitializer().getImplementation();
+            category = (Category)
+                    ((HibernateProxy) category).getHibernateLazyInitializer().getImplementation();
         }
 
         Departure departure = departureRepository
                 .findById(departureId)
                 .orElseThrow(() -> new AppException(ErrorCode.DEPARTURE_NOT_FOUND));
         if (departure instanceof HibernateProxy) {
-            departure = (Departure) ((HibernateProxy) departure).getHibernateLazyInitializer().getImplementation();
+            departure = (Departure)
+                    ((HibernateProxy) departure).getHibernateLazyInitializer().getImplementation();
         }
 
         Destination destination = destinationRepository
                 .findById(destinationId)
                 .orElseThrow(() -> new AppException(ErrorCode.DESTINATION_NOT_FOUND));
         if (destination instanceof HibernateProxy) {
-            destination = (Destination) ((HibernateProxy) destination).getHibernateLazyInitializer().getImplementation();
+            destination = (Destination)
+                    ((HibernateProxy) destination).getHibernateLazyInitializer().getImplementation();
         }
 
         Transport transportation = transportRepository
@@ -601,8 +893,10 @@ public class TourServiceImpl implements TourService {
         // 7. Cập nhật TourDetail
         tour.getTourDetails().clear(); // Xóa các details cũ
         for (TourDetailRequest detailRequest : tourDetails) {
-            if (detailRequest.getDayStart() == null || detailRequest.getDayReturn() == null ||
-                    detailRequest.getStock() == null || detailRequest.getAdultPrice() == null) {
+            if (detailRequest.getDayStart() == null
+                    || detailRequest.getDayReturn() == null
+                    || detailRequest.getStock() == null
+                    || detailRequest.getAdultPrice() == null) {
                 throw new AppException(ErrorCode.INVALID_TOUR_DETAIL_DATA);
             }
             TourDetail detail = TourDetail.builder()
@@ -633,7 +927,8 @@ public class TourServiceImpl implements TourService {
                 if (file != null && !file.isEmpty()) {
                     try {
                         CloudinaryUploadResponse cloudinaryUploadResponse = uploadImageFile.upLoadImage(file);
-                        if (cloudinaryUploadResponse.getPublicId() == null || cloudinaryUploadResponse.getUrl() == null) {
+                        if (cloudinaryUploadResponse.getPublicId() == null
+                                || cloudinaryUploadResponse.getUrl() == null) {
                             throw new AppException(ErrorCode.IMAGE_UPLOAD_FAILED);
                         }
                         TourImage tourImage = TourImage.builder()
@@ -664,17 +959,16 @@ public class TourServiceImpl implements TourService {
 
         // 10. Trả về response
         return TourResponse.builder()
-//                .id(tour.getId())
-//                .title(tour.getTitle())
-//                .isFeatured(tour.getIsFeatured())
-//                .categoryId(category.getId())
-//                .destinationId(destination.getId())
-//                .departureId(departure.getId())
-//                .transportationId(transportation.getId())
-//                .description(tour.getDescription())
+                //                .id(tour.getId())
+                //                .title(tour.getTitle())
+                //                .isFeatured(tour.getIsFeatured())
+                //                .categoryId(category.getId())
+                //                .destinationId(destination.getId())
+                //                .departureId(departure.getId())
+                //                .transportationId(transportation.getId())
+                //                .description(tour.getDescription())
                 .build();
     }
-
 
     @Override
     public void deleteTour(Long id) {
@@ -717,5 +1011,27 @@ public class TourServiceImpl implements TourService {
                 .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
         tourDetail.setStatus(TourDetailStatus.valueOf(request.getStatus()));
         tourDetailRepository.save(tourDetail);
+    }
+
+    // Hàm giả định để lấy khoảng giá từ budgetId
+    private Long getBudgetRangeMin(Integer budgetId) {
+        // Thay bằng logic thực tế của bạn
+        return switch (budgetId) {
+            case 1 -> 0L;
+            case 2 -> 5_000_000L;
+            case 3 -> 10_000_000L;
+            case 4 -> 20_000_000L;
+            default -> 0L;
+        };
+    }
+
+    private Long getBudgetRangeMax(Integer budgetId) {
+        // Thay bằng logic thực tế của bạn
+        return switch (budgetId) {
+            case 1 -> 5_000_000L;
+            case 2 -> 10_000_000L;
+            case 3 -> 20_000_000L;
+            default -> Long.MAX_VALUE;
+        };
     }
 }

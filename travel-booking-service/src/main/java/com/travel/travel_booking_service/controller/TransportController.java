@@ -1,64 +1,32 @@
 package com.travel.travel_booking_service.controller;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.travel.travel_booking_service.dto.response.ApiResponse;
+import com.travel.travel_booking_service.dto.response.TransportResponse;
+import com.travel.travel_booking_service.service.TransportService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @RestController
-@RequestMapping("/transports")
+@RequestMapping("/api/transportations")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TransportController {
-    //    TransportService transportService;
-    //
-    //    @PostMapping()
-    //    public ResponseEntity<ApiResponse<TransportResponse>> createCategory(@RequestBody @Valid TransportRequest
-    // request) {
-    //        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<TransportResponse>builder()
-    //                                                                .data(transportService.addTransport(request))
-    //                                                                .build());
-    //    }
-    //
-    //    @GetMapping("")
-    //    public ResponseEntity<ApiResponse<List<TransportResponse>>> getAllCategories() {
-    //        return ResponseEntity.status(HttpStatus.OK).body(
-    //                ApiResponse.<List<TransportResponse>>builder()
-    //                        .data(transportService.getAllTransports())
-    //                        .build()
-    //        );
-    //    }
-    //
-    //    @GetMapping("/{id}")
-    //    public ResponseEntity<ApiResponse<TransportResponse>> getCategoryById(@PathVariable Long id) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(
-    //                ApiResponse.<TransportResponse>builder()
-    //                .data(transportService.getTransportById(id))
-    //                .build()
-    //        );
-    //    }
-    //
-    //    @GetMapping("/search")
-    //    public ResponseEntity<ApiResponse<List<TransportResponse>>> getCategoryByName(@RequestParam String keyword) {
-    //        return ResponseEntity.status(HttpStatus.OK).body(
-    //                ApiResponse.<List<TransportResponse>>builder()
-    //                        .data(transportService.searchTransport(keyword))
-    //                        .build()
-    //        );
-    //    }
-    //
-    //    @PutMapping("/{id}")
-    //    public ResponseEntity<ApiResponse<TransportResponse>> updateCategory(@PathVariable Long id, @RequestBody
-    // TransportRequest request) {
-    //        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<TransportResponse>builder()
-    //                .data(transportService.updateTransport(id, request))
-    //                .build());
-    //    }
-    //
-    //    @DeleteMapping("/{id}")
-    //    public ResponseEntity deleteCategory(@PathVariable Long id) {
-    //        transportService.deleteSoftTransport(id);
-    //        return ResponseEntity.noContent().build();
-    //    }
+
+    TransportService transportService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<TransportResponse>>> getAllActiveTransports() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<TransportResponse>>builder()
+                        .data(transportService.getAllActiveTransports())
+                        .build());
+    }
 }

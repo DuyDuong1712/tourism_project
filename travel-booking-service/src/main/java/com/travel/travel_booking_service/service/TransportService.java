@@ -11,6 +11,8 @@ public interface TransportService {
 
     List<TransportResponse> getAllTransports();
 
+    List<TransportResponse> getAllActiveTransports();
+
     TransportResponse updateTransport(Long id, TransportRequest request);
 
     void deleteTransport(Long id);

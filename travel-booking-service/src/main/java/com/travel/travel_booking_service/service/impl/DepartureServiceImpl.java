@@ -83,6 +83,12 @@ public class DepartureServiceImpl implements DepartureService {
     }
 
     @Override
+    public List<DepartureResponse> getAllActiveDeparture() {
+        List<Departure> departures = departureRepository.findByInActiveTrue();
+        return departures.stream().map(departureMapper::toDepartureResponse).collect(Collectors.toList());
+    }
+
+    @Override
     public DepartureResponse changeDepartureStatus(Long id, StatusRequest statusRequest) {
         Departure departure =
                 departureRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.DEPARTURE_NOT_FOUND));

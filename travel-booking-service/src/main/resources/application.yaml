@@ -10,6 +10,12 @@ spring:
     username: root
     password: Chiduy171203
 
+    http:
+     encoding:
+        charset: UTF-8
+        enabled: true
+        force: true
+
   jpa:
     hibernate:
       ddl-auto: update

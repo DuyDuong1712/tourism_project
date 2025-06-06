@@ -42,6 +42,12 @@ public class TransportServiceImpl implements TransportService {
     }
 
     @Override
+    public List<TransportResponse> getAllActiveTransports() {
+        List<Transport> transports = transportRepository.findByInActiveTrue();
+        return transports.stream().map(transportMapper::toTransportResponse).collect(Collectors.toList());
+    }
+
+    @Override
     public TransportResponse updateTransport(Long id, TransportRequest request) {
         Transport transport =
                 transportRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.TRANSPORT_NOT_FOUND));

@@ -11,17 +11,18 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TourDetailViewResponse {
+public class CustomerTourSearchResponse {
+    Long id;
     String title;
+    String description;
+    String tourImages;
+    Boolean inActive;
+    Boolean isFeatured;
     String category;
     String departure;
     String destination;
     String transportation;
-    String description;
-    TourInformationResponse tourInformation;
-    List<TourScheduleResponse> tourSchedules;
-    List<TourDetailEdit> tourDetails;
-    List<TourImageResponse> images;
-    String createdBy;
-    Boolean inActive;
+    Long price;
+    List<String> dayStarts;
+    String duration;
 }

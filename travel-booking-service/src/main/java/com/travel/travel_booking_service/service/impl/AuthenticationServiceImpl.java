@@ -16,19 +16,18 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.travel.travel_booking_service.dto.request.AuthenticationRequest;
-import com.travel.travel_booking_service.dto.request.IntrospectRequest;
-import com.travel.travel_booking_service.dto.request.LogoutRequest;
-import com.travel.travel_booking_service.dto.request.RefreshRequest;
-import com.travel.travel_booking_service.dto.response.AuthenticationResponse;
-import com.travel.travel_booking_service.dto.response.IntrospectResponse;
-import com.travel.travel_booking_service.dto.response.LoginResponse;
+import com.travel.travel_booking_service.dto.request.*;
+import com.travel.travel_booking_service.dto.response.*;
 import com.travel.travel_booking_service.entity.InvalidatedToken;
+import com.travel.travel_booking_service.entity.Role;
 import com.travel.travel_booking_service.entity.RolePermission;
 import com.travel.travel_booking_service.entity.User;
 import com.travel.travel_booking_service.enums.ErrorCode;
+import com.travel.travel_booking_service.enums.RoleEnum;
 import com.travel.travel_booking_service.exception.AppException;
+import com.travel.travel_booking_service.mapper.UserMapper;
 import com.travel.travel_booking_service.repository.InvalidatedTokenRepository;
+import com.travel.travel_booking_service.repository.RoleRepository;
 import com.travel.travel_booking_service.repository.UserRepository;
 import com.travel.travel_booking_service.service.AuthenticationService;
 
@@ -46,6 +45,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     UserRepository userRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
+    RoleRepository roleRepository;
+    UserMapper userMapper;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -69,6 +70,48 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         InvalidatedToken invalidatedToken =
                 InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
         invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    @Override
+    public UserResponse registerUser(UserCreationRequest request) {
+        // Kiểm tra username hoặc email đã tồn tại
+        if (userRepository.existsByUsername(request.getUsername())
+                || userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.USER_EXISTS);
+        }
+
+        // Tạo user mới
+        User user = User.builder()
+                .username(request.getUsername())
+                .fullname(request.getFullname())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .build();
+
+        // Mã hóa password
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        // Gán role CUSTOMER
+        Role customerRole = roleRepository.findByCode(RoleEnum.CUSTOMER.name()).orElseGet(() -> {
+            Role role = Role.builder()
+                    .code(RoleEnum.CUSTOMER.name())
+                    .description(RoleEnum.CUSTOMER.getDescription())
+                    .build();
+            return roleRepository.save(role);
+        });
+
+        // Gán role cho user
+        user.setRole(customerRole);
+
+        // Lưu user vào DB
+        userRepository.save(user);
+
+        // Trả response
+        UserResponse userResponse = userMapper.toUserResponse(user);
+        userResponse.setRole(customerRole.getCode());
+
+        return userResponse;
     }
 
     @Override

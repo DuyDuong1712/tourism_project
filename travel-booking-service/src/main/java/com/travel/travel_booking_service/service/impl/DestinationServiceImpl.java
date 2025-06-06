@@ -187,6 +187,13 @@ public class DestinationServiceImpl implements DestinationService {
     }
 
     @Override
+    public List<DestinationResponse> getAllActiveDestinations() {
+        return destinationRepository.findByInActiveTrue().stream()
+                .map(destinationMapper::toDestinationResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public DestinationResponse getDestinationById(Long id) {
         return null;
     }

@@ -68,13 +68,13 @@ public class TourDetail extends BaseEntity {
     @Column(name = "discount_percent", columnDefinition = "INT DEFAULT 0")
     private Integer discountPercent;
 
-//    @PrePersist
-//    @PreUpdate
-//    public void calculateRemainingSlots() {
-//        if (stock != null && bookedSlots != null) {
-//            this.remainingSlots = stock - bookedSlots;
-//        }
-//    }
+    //    @PrePersist
+    //    @PreUpdate
+    //    public void calculateRemainingSlots() {
+    //        if (stock != null && bookedSlots != null) {
+    //            this.remainingSlots = stock - bookedSlots;
+    //        }
+    //    }
 
     public int getRemainingSlots() {
         return (stock != null ? stock : 0) - (bookedSlots != null ? bookedSlots : 0);

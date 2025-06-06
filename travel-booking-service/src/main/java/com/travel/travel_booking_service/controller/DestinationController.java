@@ -1,4 +1,4 @@
-package com.travel.travel_booking_service.controller.client;
+package com.travel.travel_booking_service.controller;
 
 import java.util.List;
 
@@ -15,10 +15,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @RestController
-@RequestMapping("/api/client/destinations")
+@RequestMapping("/api/destinations")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class ClientDestinationController {
+// @PreAuthorize("hasRole('ADMIN')")
+public class DestinationController {
 
     DestinationService destinationService;
 
@@ -26,15 +27,23 @@ public class ClientDestinationController {
     public ResponseEntity<ApiResponse<List<DestinationResponse>>> getAllDestinations() {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<List<DestinationResponse>>builder()
-                        .data(destinationService.getAllDestinations())
+                        .data(destinationService.getAllActiveDestinations())
                         .build());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<DestinationResponse>> getDestinationById(@PathVariable Long id) {
+    @GetMapping("/parent-list")
+    public ResponseEntity<ApiResponse<List<DestinationResponse>>> getParentDestinations() {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<DestinationResponse>builder()
-                        .data(destinationService.getDestinationById(id))
+                .body(ApiResponse.<List<DestinationResponse>>builder()
+                        .data(destinationService.getParentDestinations())
+                        .build());
+    }
+
+    @GetMapping("/{id}/children")
+    public ResponseEntity<ApiResponse<List<DestinationResponse>>> getChildrenDestinations(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<DestinationResponse>>builder()
+                        .data(destinationService.getChildrenByParentId(id))
                         .build());
     }
 }

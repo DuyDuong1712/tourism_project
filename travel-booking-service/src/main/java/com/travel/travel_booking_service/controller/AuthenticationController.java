@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.nimbusds.jose.JOSEException;
-import com.travel.travel_booking_service.dto.request.AuthenticationRequest;
-import com.travel.travel_booking_service.dto.request.IntrospectRequest;
-import com.travel.travel_booking_service.dto.request.LogoutRequest;
-import com.travel.travel_booking_service.dto.request.RefreshRequest;
+import com.travel.travel_booking_service.dto.request.*;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.AuthenticationResponse;
 import com.travel.travel_booking_service.dto.response.IntrospectResponse;
@@ -39,8 +36,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/register")
-    public ApiResponse<Void> register(@RequestBody LogoutRequest logoutRequest) throws ParseException, JOSEException {
-        authenticationService.logout(logoutRequest);
+    public ApiResponse<Void> register(@RequestBody UserCreationRequest userCreationRequest)
+            throws ParseException, JOSEException {
+        authenticationService.registerUser(userCreationRequest);
         return ApiResponse.<Void>builder().build();
     }
 
@@ -51,7 +49,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
-    public ApiResponse<AuthenticationResponse> logout(@RequestBody RefreshRequest refreshRequest)
+    public ApiResponse<AuthenticationResponse> refresh(@RequestBody RefreshRequest refreshRequest)
             throws ParseException, JOSEException {
         AuthenticationResponse result = authenticationService.refreshToken(refreshRequest);
         return ApiResponse.<AuthenticationResponse>builder().data(result).build();

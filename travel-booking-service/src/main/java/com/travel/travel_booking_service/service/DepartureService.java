@@ -15,5 +15,7 @@ public interface DepartureService {
 
     List<DepartureResponse> getAllDeparture();
 
+    List<DepartureResponse> getAllActiveDeparture();
+
     DepartureResponse changeDepartureStatus(Long id, StatusRequest statusRequest);
 }

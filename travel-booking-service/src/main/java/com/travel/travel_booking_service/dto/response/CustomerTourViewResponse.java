@@ -1,9 +1,9 @@
 package com.travel.travel_booking_service.dto.response;
 
-import java.util.List;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -11,17 +11,13 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class TourDetailViewResponse {
+public class CustomerTourViewResponse {
+    Long id;
     String title;
-    String category;
-    String departure;
-    String destination;
-    String transportation;
     String description;
+    Long price;
+    List<TourImageResponse> tourImages;
+    List<CustomerTourDetail> tourDetails;
     TourInformationResponse tourInformation;
     List<TourScheduleResponse> tourSchedules;
-    List<TourDetailEdit> tourDetails;
-    List<TourImageResponse> images;
-    String createdBy;
-    Boolean inActive;
 }
