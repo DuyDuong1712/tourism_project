@@ -23,4 +23,5 @@ public class CustomerTourDetail {
     private LocalDateTime dayStart;
     private LocalDateTime dayReturn;
     private Long duration;
+    private String status;
 }
