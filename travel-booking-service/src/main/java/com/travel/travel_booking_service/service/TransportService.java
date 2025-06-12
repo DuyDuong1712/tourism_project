@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.TransportRequest;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import com.travel.travel_booking_service.dto.response.TransportResponse;
 
 public interface TransportService {
@@ -18,4 +19,6 @@ public interface TransportService {
     void deleteTransport(Long id);
 
     TransportResponse changeTransportStatus(Long id, StatusRequest statusRequest);
+
+    StatisticResponse getTransportStatistics();
 }

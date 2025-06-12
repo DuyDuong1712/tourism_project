@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -272,6 +273,14 @@ public class DestinationServiceImpl implements DestinationService {
         return destinationRepository.findByInActiveTrue().stream()
                 .map(destinationMapper::toDestinationResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public StatisticResponse getDestinationStatistics() {
+        Long activeCount = destinationRepository.countByInActiveTrue();
+        Long inActiveCount = destinationRepository.countByInActiveFalse();
+
+        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
     }
 
     @Override

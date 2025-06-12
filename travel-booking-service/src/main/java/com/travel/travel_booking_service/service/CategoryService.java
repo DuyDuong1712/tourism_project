@@ -5,6 +5,7 @@ import java.util.List;
 import com.travel.travel_booking_service.dto.request.CategoryRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.CategoryResponse;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 
 public interface CategoryService {
     CategoryResponse createCategory(CategoryRequest request);
@@ -18,4 +19,6 @@ public interface CategoryService {
     void deleteCategory(Long id);
 
     CategoryResponse changeCategoryStatus(Long id, StatusRequest statusRequest);
+
+    StatisticResponse getCategoryStatistics();
 }

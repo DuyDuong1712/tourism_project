@@ -20,4 +20,8 @@ public interface DepartureRepository extends CrudRepository<Departure, Long> {
     boolean existsByNameIgnoreCase(String name);
 
     boolean existsByCodeIgnoreCase(String code);
+
+    Long countByInActiveTrue();
+
+    Long countByInActiveFalse();
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.enums.BookingStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -49,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TourServiceImpl implements TourService {
 
+
     TourRepository tourRepository;
     CategoryRepository categoryRepository;
     DepartureRepository departureRepository;
@@ -57,6 +59,7 @@ public class TourServiceImpl implements TourService {
     TourInformationRepository tourInformationRepository;
     TourSchedulesRepository tourSchedulesRepository;
     TourDetailRepository tourDetailRepository;
+    BookingRepository bookingRepository;
     UploadImageFile uploadImageFile;
     TourImageRepository tourImageRepository;
     TourMapper tourMapper;
@@ -1066,12 +1069,28 @@ public class TourServiceImpl implements TourService {
     }
 
     @Override
-    public void changeToursDetailsStatus(Long TourDetailId, ToursDetailsStatusRequest request) {
+    public void changeToursDetailsStatus(Long tourDetailId, ToursDetailsStatusRequest request) {
         TourDetail tourDetail = tourDetailRepository
-                .findById(TourDetailId)
+                .findById(tourDetailId)
                 .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
         tourDetail.setStatus(request.getStatus());
         tourDetailRepository.save(tourDetail);
+
+        if (TourDetailStatus.COMPLETED.name().equals(request.getStatus())) {
+            bookingRepository.updateBookingStatusByTourDetailId(tourDetailId, BookingStatus.COMPLETED.name());
+        } else if (TourDetailStatus.CANCELLED.name().equals(request.getStatus())) {
+            bookingRepository.updateBookingStatusByTourDetailId(tourDetailId, BookingStatus.CANCELLED.name());
+        } else if (TourDetailStatus.IN_PROGRESS.name().equals(request.getStatus())) {
+            bookingRepository.updateBookingStatusByTourDetailId(tourDetailId, BookingStatus.CONFIRMED.name());
+        }
+    }
+
+    @Override
+    public StatisticResponse getTourStatistics() {
+        Long activeCount = tourRepository.countByInActiveTrue();
+        Long inActiveCount = tourRepository.countByInActiveFalse();
+
+        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
     }
 
     // Hàm giả định để lấy khoảng giá từ budgetId

@@ -85,4 +85,6 @@ public interface TourService {
     void changeTourFeatured(Long id, FeaturedRequest featuredRequest);
 
     void changeToursDetailsStatus(Long TourDetailId, ToursDetailsStatusRequest request);
+
+    StatisticResponse getTourStatistics();
 }

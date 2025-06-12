@@ -5,6 +5,7 @@ import java.util.List;
 import com.travel.travel_booking_service.dto.request.DepartureRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.DepartureResponse;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 
 public interface DepartureService {
     DepartureResponse createDeparture(DepartureRequest departureRequest);
@@ -18,4 +19,6 @@ public interface DepartureService {
     List<DepartureResponse> getAllActiveDeparture();
 
     DepartureResponse changeDepartureStatus(Long id, StatusRequest statusRequest);
+
+    StatisticResponse getDepartureStatistics();
 }

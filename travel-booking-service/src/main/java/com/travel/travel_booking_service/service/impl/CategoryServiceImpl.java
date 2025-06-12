@@ -3,6 +3,7 @@ package com.travel.travel_booking_service.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,5 +89,13 @@ public class CategoryServiceImpl implements CategoryService {
         category.setInActive(statusRequest.getInActive());
 
         return categoryMapper.toCategoryResponse(categoryRepository.save(category));
+    }
+
+    @Override
+    public StatisticResponse getCategoryStatistics() {
+        Long activeCount = categoryRepository.countByInActiveTrue();
+        Long inActiveCount = categoryRepository.countByInActiveFalse();
+
+        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
     }
 }

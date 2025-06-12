@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -63,6 +64,15 @@ public class AdminCategoryController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<CategoryResponse>builder()
                         .data(categoryService.changeCategoryStatus(id, statusRequest))
+                        .build());
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<ApiResponse<StatisticResponse>> getCategoryStatistics() {
+        StatisticResponse statistics = categoryService.getCategoryStatistics();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<StatisticResponse>builder()
+                        .data(statistics)
                         .build());
     }
 }

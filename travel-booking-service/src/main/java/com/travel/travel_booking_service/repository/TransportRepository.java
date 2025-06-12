@@ -22,4 +22,8 @@ public interface TransportRepository extends JpaRepository<Transport, Long> {
     List<Transport> findByType(String type);
 
     List<Transport> findByBrand(String brand);
+
+    Long countByInActiveTrue();
+
+    Long countByInActiveFalse();
 }

@@ -3,6 +3,7 @@ package com.travel.travel_booking_service.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import lombok.experimental.FieldDefaults;
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DepartureServiceImpl implements DepartureService {
+
 
     DepartureRepository departureRepository;
     DepartureMapper departureMapper;
@@ -95,5 +97,13 @@ public class DepartureServiceImpl implements DepartureService {
         departure.setInActive(statusRequest.getInActive());
 
         return departureMapper.toDepartureResponse(departureRepository.save(departure));
+    }
+
+    @Override
+    public StatisticResponse getDepartureStatistics() {
+        Long activeCount = departureRepository.countByInActiveTrue();
+        Long inActiveCount = departureRepository.countByInActiveFalse();
+
+        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
     }
 }

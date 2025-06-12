@@ -173,4 +173,13 @@ public class AdminTourController {
         tourService.changeToursDetailsStatus(tourDetailsId, request);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<ApiResponse<StatisticResponse>> getTourStatistics() {
+        StatisticResponse statistics = tourService.getTourStatistics();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<StatisticResponse>builder()
+                        .data(statistics)
+                        .build());
+    }
 }

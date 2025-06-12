@@ -15,12 +15,6 @@ public interface DestinationRepository extends JpaRepository<Destination, Long> 
 
     List<Destination> findByInActiveTrue();
 
-    // Tìm destination theo code
-    Optional<Destination> findByCode(String code);
-
-    // Tìm destination theo tên và code
-    Optional<Destination> findByNameAndCode(String name, String code);
-
     boolean existsByNameIgnoreCase(String name);
 
     boolean existsByCodeIgnoreCase(String code);
@@ -68,4 +62,10 @@ public interface DestinationRepository extends JpaRepository<Destination, Long> 
                     + ") SELECT id, name, parent_id, level FROM destination_descendants WHERE level > 0",
             nativeQuery = true)
     List<Object[]> findDescendants(Long id);
+
+
+
+    Long countByInActiveTrue ();
+
+    Long countByInActiveFalse();
 }

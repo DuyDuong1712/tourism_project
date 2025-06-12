@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.service;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
@@ -28,4 +29,6 @@ public interface DestinationService {
     List<DestinationResponse> getParentDestinations();
 
     List<DestinationResponse> getChildrenByParentId(Long id);
+
+    StatisticResponse getDestinationStatistics();
 }

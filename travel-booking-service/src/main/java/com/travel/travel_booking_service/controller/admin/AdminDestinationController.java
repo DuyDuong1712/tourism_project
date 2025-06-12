@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -89,6 +90,15 @@ public class AdminDestinationController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<List<DestinationResponse>>builder()
                         .data(destinationService.getChildrenByParentId(id))
+                        .build());
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<ApiResponse<StatisticResponse>> getDestinationStatistics() {
+        StatisticResponse statistics = destinationService.getDestinationStatistics();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<StatisticResponse>builder()
+                        .data(statistics)
                         .build());
     }
 }
