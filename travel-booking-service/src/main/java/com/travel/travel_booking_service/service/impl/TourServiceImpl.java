@@ -5,6 +5,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TourServiceImpl implements TourService {
-
 
     TourRepository tourRepository;
     CategoryRepository categoryRepository;
@@ -623,20 +624,46 @@ public class TourServiceImpl implements TourService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TourDetailResponse> getAllToursWithDetails() {
-        List<Tour> tourProjections = tourRepository.findAll();
+    public List<TourDetailResponse> getAllToursWithDetails(Long destinationId,
+                                                           Long departureId,
+                                                           Long transportationId,
+                                                           Long categoryId,
+                                                           Boolean inActive,
+                                                           Boolean isFeatured,
+                                                           String title, String fromDate) {
+        List<Long> destinationIds = null;
+        if (destinationId != null) {
+            destinationIds = getAllDestinationIds(destinationId);
+        }
+
+        // Parse fromDate kiểu "yyyy-MM-dd"
+        LocalDateTime parsedFromDate = null;
+        if (fromDate != null && !fromDate.isBlank()) {
+            try {
+                LocalDate date = LocalDate.parse(fromDate); // parse theo định dạng yyyy-MM-dd
+                parsedFromDate = date.atStartOfDay(); // chuyển sang LocalDateTime
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("fromDate không đúng định dạng yyyy-MM-dd. Ví dụ: 2025-06-25");
+            }
+        }
+
+        List<Tour> tours = tourRepository.findAllFiltered(
+                destinationIds, departureId, transportationId, categoryId, inActive, isFeatured, title);
         List<TourDetailResponse> tourDetailResponses = new ArrayList<>();
 
-        for (Tour tour : tourProjections) {
-            // Lấy trước danh sách ảnh tour
+        for (Tour tour : tours) {
             List<String> tourImageUrls = tourImageRepository.getByTour_Id(tour.getId()).stream()
                     .map(TourImage::getCloudinaryUrl)
                     .collect(Collectors.toList());
 
-            // Lấy danh sách các chi tiết tour (TourDetail)
             List<TourDetail> tourDetails = tourDetailRepository.findByTour_Id(tour.getId());
 
             for (TourDetail tourDetail : tourDetails) {
+                // Lọc theo fromDate nếu có
+                if (parsedFromDate != null && (tourDetail.getDayStart() == null || !tourDetail.getDayStart().isAfter(parsedFromDate))) {
+                    continue;
+                }
+
                 TourDetailResponse tourDetailResponse = new TourDetailResponse();
 
                 // Gán thông tin từ tour
@@ -669,6 +696,7 @@ public class TourServiceImpl implements TourService {
                 tourDetailResponses.add(tourDetailResponse);
             }
         }
+
         return tourDetailResponses;
     }
 
@@ -1091,6 +1119,134 @@ public class TourServiceImpl implements TourService {
         Long inActiveCount = tourRepository.countByInActiveFalse();
 
         return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
+    }
+
+    @Override
+    public List<TourDetailResponse> getAllToursDetailExpiredSoon(Long destinationId, Long departureId, Long transportationId, Long categoryId, Boolean inActive, Boolean isFeatured, String title) {
+        List<Long> destinationIds = null;
+        if (destinationId != null) {
+            destinationIds = getAllDestinationIds(destinationId);
+        }
+
+        List<Tour> tours = tourRepository.findAllFiltered(
+                destinationIds, departureId, transportationId, categoryId, inActive, isFeatured, title);
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime upcoming = now.plusDays(7);
+
+        List<TourDetailResponse> tourDetailResponses = new ArrayList<>();
+        for (Tour tour : tours) {
+
+            // Lọc các TourDetail có ngày bắt đầu trong khoảng từ hôm nay đến 7 ngày tới
+            List<TourDetail> upcomingTourDetails = tour.getTourDetails().stream()
+                    .filter(tourDetail -> {
+                        LocalDateTime startDate = tourDetail.getDayStart();
+                        return startDate != null &&
+                                !startDate.isBefore(now) && // >= now
+                                !startDate.isAfter(upcoming); // <= now + 7
+                    })
+                    .collect(Collectors.toList());
+
+            // Nếu không có trip sắp hết hạn thì bỏ qua tour này
+            if (upcomingTourDetails.isEmpty()) continue;
+
+            // Lấy danh sách ảnh tour
+            List<String> tourImageUrls = new ArrayList<>();
+            for (TourImage tourImage : tourImageRepository.getByTour_Id(tour.getId())) {
+                String cloudinaryUrl = tourImage.getCloudinaryUrl();
+                tourImageUrls.add(cloudinaryUrl);
+            }
+
+            for (TourDetail tourDetail : upcomingTourDetails) {
+                TourDetailResponse tourDetailResponse = TourDetailResponse.builder()
+                        .id(tour.getId())
+                        .tourDetailId(tourDetail.getId())
+                        .title(tour.getTitle())
+                        .tourImages(tourImageUrls)
+                        .status(tourDetail.getStatus())
+                        .inActive(tour.getInActive())
+                        .isFeatured(tour.getIsFeatured())
+                        .description(tour.getDescription())
+                        .adultPrice(tourDetail.getAdultPrice())
+                        .childrenPrice(tourDetail.getChildrenPrice())
+                        .childPrice(tourDetail.getChildPrice())
+                        .babyPrice(tourDetail.getBabyPrice())
+                        .slots(tourDetail.getStock())
+                        .remainingSlots(tourDetail.getRemainingSlots())
+                        .bookedSlots(tourDetail.getBookedSlots())
+                        .category(tour.getCategory().getName())
+                        .departure(tour.getDeparture().getName())
+                        .destination(tour.getDestination().getName())
+                        .transportation(tour.getTransport().getName())
+                        .dayStart(tourDetail.getDayStart())
+                        .dayReturn(tourDetail.getDayReturn())
+                        .build();
+                tourDetailResponses.add(tourDetailResponse);
+            }
+        }
+        return tourDetailResponses;
+    }
+
+    @Override
+    public List<TourDetailResponse> getAllToursDetailExpired(Long destinationId, Long departureId, Long transportationId, Long categoryId, Boolean inActive, Boolean isFeatured, String title) {
+        List<Long> destinationIds = null;
+        if (destinationId != null) {
+            destinationIds = getAllDestinationIds(destinationId);
+        }
+
+        List<Tour> tours = tourRepository.findAllFiltered(
+                destinationIds, departureId, transportationId, categoryId, inActive, isFeatured, title);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<TourDetailResponse> tourDetailResponses = new ArrayList<>();
+        for (Tour tour : tours) {
+
+            // Lọc các TourDetail đã hết hạn (trước thời điểm hiện tại)
+            List<TourDetail> expiredTourDetails = tour.getTourDetails().stream()
+                    .filter(tourDetail -> {
+                        LocalDateTime startDate = tourDetail.getDayStart();
+                        return startDate != null && startDate.isBefore(now);
+                    })
+                    .collect(Collectors.toList());
+
+            if (expiredTourDetails.isEmpty()) continue;
+
+            // Lấy danh sách ảnh tour
+            List<String> tourImageUrls = tourImageRepository.getByTour_Id(tour.getId())
+                    .stream()
+                    .map(TourImage::getCloudinaryUrl)
+                    .collect(Collectors.toList());
+
+            for (TourDetail tourDetail : expiredTourDetails) {
+                TourDetailResponse tourDetailResponse = TourDetailResponse.builder()
+                        .id(tour.getId())
+                        .tourDetailId(tourDetail.getId())
+                        .title(tour.getTitle())
+                        .tourImages(tourImageUrls)
+                        .status(tourDetail.getStatus())
+                        .inActive(tour.getInActive())
+                        .isFeatured(tour.getIsFeatured())
+                        .description(tour.getDescription())
+                        .adultPrice(tourDetail.getAdultPrice())
+                        .childrenPrice(tourDetail.getChildrenPrice())
+                        .childPrice(tourDetail.getChildPrice())
+                        .babyPrice(tourDetail.getBabyPrice())
+                        .slots(tourDetail.getStock())
+                        .remainingSlots(tourDetail.getRemainingSlots())
+                        .bookedSlots(tourDetail.getBookedSlots())
+                        .category(tour.getCategory().getName())
+                        .departure(tour.getDeparture().getName())
+                        .destination(tour.getDestination().getName())
+                        .transportation(tour.getTransport().getName())
+                        .dayStart(tourDetail.getDayStart())
+                        .dayReturn(tourDetail.getDayReturn())
+                        .build();
+                tourDetailResponses.add(tourDetailResponse);
+            }
+        }
+
+        return tourDetailResponses;
     }
 
     // Hàm giả định để lấy khoảng giá từ budgetId
