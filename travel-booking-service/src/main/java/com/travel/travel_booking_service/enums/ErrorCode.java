@@ -60,6 +60,7 @@ public enum ErrorCode {
     INVALID_TOUR_CATEGORY(3010, "Danh mục tour không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_SCHEDULE_DATA(3010, "lịch trình tour không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_TOUR_DETAIL_DATA(3010, "chi tiết tour không hợp lệ", HttpStatus.BAD_REQUEST),
+    NOT_ENOUGH_SLOTS(3010, "Không còn đủ chỗ", HttpStatus.BAD_REQUEST),
 
     // Mã lỗi liên quan đến Booking
     BOOKING_NOT_FOUND(4000, "Không tìm thấy đơn đặt tour", HttpStatus.NOT_FOUND),
