@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.service.impl;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -9,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.net.URLDecoder;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -37,7 +37,6 @@ import com.travel.travel_booking_service.repository.*;
 import com.travel.travel_booking_service.service.TourService;
 import com.travel.travel_booking_service.service.UploadImageFile;
 
-
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -49,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TourServiceImpl implements TourService {
-
 
     TourRepository tourRepository;
     CategoryRepository categoryRepository;
@@ -155,7 +153,7 @@ public class TourServiceImpl implements TourService {
                     .discountPercent(detailRequest.getDiscount())
                     .dayStart(detailRequest.getDayStart())
                     .dayReturn(detailRequest.getDayReturn())
-                    .status(TourDetailStatus.SCHEDULED)
+                    .status(TourDetailStatus.SCHEDULED.name())
                     .singleRoomSupplementPrice(
                             (detailRequest.getSingleRoomSupplementPrice() != null)
                                     ? detailRequest.getSingleRoomSupplementPrice()
@@ -263,16 +261,16 @@ public class TourServiceImpl implements TourService {
             LocalDate today = LocalDate.now();
             Join<Tour, TourDetail> tourDetailJoin = root.join("tourDetails", JoinType.INNER);
             if (fromDate != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), fromDate.atStartOfDay()));
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), fromDate.atStartOfDay()));
             } else {
                 // Loại các tour có dayStart trước ngày hiện tại
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), today.atStartOfDay()));
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), today.atStartOfDay()));
             }
 
             // Chỉ lấy các tour có trạng thái hợp lệ (scheduled, confirmed, in_progress)
-            predicates.add(tourDetailJoin
-                    .get("status")
-                    .in(TourDetailStatus.SCHEDULED, TourDetailStatus.CONFIRMED));
+            predicates.add(tourDetailJoin.get("status").in(TourDetailStatus.SCHEDULED));
 
             // Đảm bảo truy vấn trả về các kết quả khác nhau
             query.distinct(true);
@@ -293,24 +291,45 @@ public class TourServiceImpl implements TourService {
                     response.setDeparture(tour.getDeparture().getName());
                     response.setCategory(tour.getCategory().getName());
 
-                    List<String> dayStarts = new ArrayList<>();
-                    // Ánh xạ thông tin từ TourDetail
-                    if (!tour.getTourDetails().isEmpty()) {
-                        TourDetail latestDetail = tour.getTourDetails().stream()
-                                .filter(detail -> (fromDate == null && !detail.getDayStart().toLocalDate().isBefore(LocalDate.now()))
-                                        || (fromDate != null && !detail.getDayStart().toLocalDate().isBefore(fromDate)))
-                                .findFirst()
-                                .orElse(null);
-                        if (latestDetail != null) {
-                            response.setPrice(latestDetail.getAdultPrice());
-                            response.setDuration(Long.toString(ChronoUnit.DAYS.between(latestDetail.getDayStart(), latestDetail.getDayReturn())));
-                            dayStarts.add(latestDetail.getDayStart().toString());
-                        } else {
-                            return null; // Loại bỏ tour nếu không có tourDetail hợp lệ
-                        }
-                    } else {
-                        return null; // Loại bỏ tour nếu không có tourDetails
+                    // Lấy tất cả dayStart hợp lệ từ tourDetails
+                    List<String> dayStarts = tour.getTourDetails().stream()
+                            .filter(detail -> (fromDate == null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(LocalDate.now()))
+                                    || (fromDate != null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(fromDate)))
+                            .filter(detail -> detail.getStatus() == TourDetailStatus.SCHEDULED.name())
+                            .map(detail -> detail.getDayStart().toString())
+                            .collect(Collectors.toList());
+
+                    // Nếu không có tourDetails hợp lệ, loại bỏ tour
+                    if (dayStarts.isEmpty()) {
+                        return null;
                     }
+
+                    // Lấy tourDetail đầu tiên để lấy giá và duration
+                    TourDetail firstValidDetail = tour.getTourDetails().stream()
+                            .filter(detail -> (fromDate == null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(LocalDate.now()))
+                                    || (fromDate != null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(fromDate)))
+                            .filter(detail -> detail.getStatus() == TourDetailStatus.SCHEDULED.name())
+                            .findFirst()
+                            .orElse(null);
+
+                    if (firstValidDetail != null) {
+                        response.setPrice(firstValidDetail.getAdultPrice());
+                        response.setDuration(Long.toString(ChronoUnit.DAYS.between(
+                                firstValidDetail.getDayStart(), firstValidDetail.getDayReturn())));
+                    }
+
                     response.setDayStarts(dayStarts);
 
                     // Ánh xạ thêm ảnh chính nếu có
@@ -345,7 +364,7 @@ public class TourServiceImpl implements TourService {
                     String decodedSlug = URLDecoder.decode(slug, StandardCharsets.UTF_8.name())
                             .toLowerCase()
                             .trim();
-//                            .replaceAll("\\.", " ");
+                    //                            .replaceAll("\\.", " ");
                     System.out.println("decodedSlug: " + decodedSlug);
 
                     // Normalize the slug for comparison
@@ -389,16 +408,16 @@ public class TourServiceImpl implements TourService {
             LocalDate today = LocalDate.now();
             Join<Tour, TourDetail> tourDetailJoin = root.join("tourDetails", JoinType.INNER);
             if (fromDate != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), fromDate.atStartOfDay()));
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), fromDate.atStartOfDay()));
             } else {
                 // Loại các tour có dayStart trước ngày hiện tại
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), today.atStartOfDay()));
+                predicates.add(
+                        criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), today.atStartOfDay()));
             }
 
             // Chỉ lấy các tour có trạng thái hợp lệ (scheduled, confirmed, in_progress)
-            predicates.add(tourDetailJoin
-                    .get("status")
-                    .in(TourDetailStatus.SCHEDULED, TourDetailStatus.CONFIRMED));
+            predicates.add(tourDetailJoin.get("status").in(TourDetailStatus.SCHEDULED));
 
             // Đảm bảo truy vấn trả về các kết quả khác nhau
             query.distinct(true);
@@ -419,24 +438,45 @@ public class TourServiceImpl implements TourService {
                     response.setDeparture(tour.getDeparture().getName());
                     response.setCategory(tour.getCategory().getName());
 
-                    List<String> dayStarts = new ArrayList<>();
-                    // Ánh xạ thêm thông tin từ TourDetail
-                    if (!tour.getTourDetails().isEmpty()) {
-                        TourDetail latestDetail = tour.getTourDetails().stream()
-                                .filter(detail -> (fromDate == null && !detail.getDayStart().toLocalDate().isBefore(LocalDate.now()))
-                                        || (fromDate != null && !detail.getDayStart().toLocalDate().isBefore(fromDate)))
-                                .findFirst()
-                                .orElse(null);
-                        if (latestDetail != null) {
-                            response.setPrice(latestDetail.getAdultPrice());
-                            response.setDuration(Long.toString(ChronoUnit.DAYS.between(latestDetail.getDayStart(), latestDetail.getDayReturn())));
-                            dayStarts.add(latestDetail.getDayStart().toString());
-                        } else {
-                            return null; // Loại bỏ tour nếu không có tourDetail hợp lệ
-                        }
-                    } else {
-                        return null; // Loại bỏ tour nếu không có tourDetails
+                    // Lấy tất cả dayStart hợp lệ từ tourDetails
+                    List<String> dayStarts = tour.getTourDetails().stream()
+                            .filter(detail -> (fromDate == null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(LocalDate.now()))
+                                    || (fromDate != null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(fromDate)))
+                            .filter(detail -> detail.getStatus() == TourDetailStatus.SCHEDULED.name())
+                            .map(detail -> detail.getDayStart().toString())
+                            .collect(Collectors.toList());
+
+                    // Nếu không có tourDetails hợp lệ, loại bỏ tour
+                    if (dayStarts.isEmpty()) {
+                        return null;
                     }
+
+                    // Lấy tourDetail đầu tiên để lấy giá và duration
+                    TourDetail firstValidDetail = tour.getTourDetails().stream()
+                            .filter(detail -> (fromDate == null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(LocalDate.now()))
+                                    || (fromDate != null
+                                            && !detail.getDayStart()
+                                                    .toLocalDate()
+                                                    .isBefore(fromDate)))
+                            .filter(detail -> Objects.equals(detail.getStatus(), TourDetailStatus.SCHEDULED.name()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (firstValidDetail != null) {
+                        response.setPrice(firstValidDetail.getAdultPrice());
+                        response.setDuration(Long.toString(ChronoUnit.DAYS.between(
+                                firstValidDetail.getDayStart(), firstValidDetail.getDayReturn())));
+                    }
+
                     response.setDayStarts(dayStarts);
 
                     // Ánh xạ thêm ảnh chính nếu có
@@ -459,7 +499,6 @@ public class TourServiceImpl implements TourService {
         response.setDescription(tour.getDescription());
         response.setDestination(tour.getDestination().getName());
         response.setDeparture(tour.getDeparture().getName());
-
 
         List<TourImage> tourImages = tour.getTourImages();
         List<TourImageResponse> tourImageResponses = new ArrayList<>();
@@ -489,7 +528,7 @@ public class TourServiceImpl implements TourService {
                     .dayStart(tourDetail.getDayStart())
                     .dayReturn(tourDetail.getDayReturn())
                     .duration(ChronoUnit.DAYS.between(tourDetail.getDayStart(), tourDetail.getDayReturn()))
-                    .status(tourDetail.getStatus().name())
+                    .status(tourDetail.getStatus())
                     .build();
 
             customerTourDetails.add(customerTourDetail);
@@ -524,7 +563,6 @@ public class TourServiceImpl implements TourService {
 
         return response;
     }
-
 
     // Hàm lấy tất cả các destination con nếu có trong destination
     public List<Long> getAllDestinationIds(Long parentId) {
@@ -608,7 +646,7 @@ public class TourServiceImpl implements TourService {
 
                 // Gán thông tin từ tourDetail
                 tourDetailResponse.setTourDetailId(tourDetail.getId());
-                tourDetailResponse.setStatus(tourDetail.getStatus().name());
+                tourDetailResponse.setStatus(tourDetail.getStatus());
                 tourDetailResponse.setAdultPrice(tourDetail.getAdultPrice());
                 tourDetailResponse.setChildrenPrice(tourDetail.getChildrenPrice());
                 tourDetailResponse.setChildPrice(tourDetail.getChildPrice());
@@ -931,7 +969,7 @@ public class TourServiceImpl implements TourService {
                     .stock(detailRequest.getStock())
                     .dayStart(detailRequest.getDayStart())
                     .dayReturn(detailRequest.getDayReturn())
-                    .status(TourDetailStatus.SCHEDULED)
+                    .status(TourDetailStatus.SCHEDULED.name())
                     .singleRoomSupplementPrice(
                             (detailRequest.getSingleRoomSupplementPrice() != null)
                                     ? detailRequest.getSingleRoomSupplementPrice()
@@ -1032,7 +1070,7 @@ public class TourServiceImpl implements TourService {
         TourDetail tourDetail = tourDetailRepository
                 .findById(TourDetailId)
                 .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
-        tourDetail.setStatus(TourDetailStatus.valueOf(request.getStatus()));
+        tourDetail.setStatus(request.getStatus());
         tourDetailRepository.save(tourDetail);
     }
 

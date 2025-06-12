@@ -6,7 +6,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/tour_management_fix
+    url: jdbc:mysql://localhost:3306/tour_management_final
     username: root
     password: Chiduy171203
 
@@ -36,3 +36,10 @@ jwt:
   signerKey: "eDvTlohzG6dHiJU9GdHzVGBq3T9b/UaLG9yqif0EuejdhEFOCuV4YHBIQjSNLG5Z"
   valid-duration: 1800 #30phut  #in second
   refreshable-duration: 259200 #in second #3 ngay
+
+vnpay:
+  pay-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  return-url: "http://localhost:8080/travel/api/payment/vnpay/callback"
+  tmn-code: "A69DY06U"
+  secret-key: "QSU32Z0OZ3PWTRQF3SE7KBP9RJQ7K8QL"
+  api-url: "https://sandbox.vnpayment.vn/merchant_webapi/api/transaction"

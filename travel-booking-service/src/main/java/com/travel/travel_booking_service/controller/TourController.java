@@ -60,9 +60,6 @@ public class TourController {
                         .build());
     }
 
-
-
-
     @GetMapping("/filter")
     public ResponseEntity<ApiResponse<List<TourResponse>>> getAllToursFiltered(
             @RequestParam(required = false) Long destinationId,

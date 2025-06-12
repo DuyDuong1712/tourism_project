@@ -32,11 +32,11 @@ public class AdminUserController {
             @RequestParam("fullName") String fullName,
             @RequestParam("email") String email,
             @RequestParam("phone") String phone,
-            @RequestParam("roleId") Long roleid,
+            @RequestParam("roleId") Long roleId,
             @RequestParam(value = "image", required = false) MultipartFile imageFile) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.<UserResponse>builder()
-                        .data(userService.createUser(username, password, fullName, email, phone, roleid, imageFile))
+                        .data(userService.createUser(username, password, fullName, email, phone, roleId, imageFile))
                         .build());
     }
 

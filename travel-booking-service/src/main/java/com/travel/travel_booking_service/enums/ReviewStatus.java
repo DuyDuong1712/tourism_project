@@ -1,14 +1,12 @@
 package com.travel.travel_booking_service.enums;
 
-public enum PaymentStatus {
-    PENDING("Chờ xử lý"),
-    PAID("Đã thanh toán"),
-    REFUNDED("Đã hoàn tiền"),
-    FAILED("Thất bại");
+public enum ReviewStatus {
+    APPROVED("Đã được phê duyệt"),
+    HIDDEN("Đã bị ẩn");
 
     private final String description;
 
-    PaymentStatus(String description) {
+    ReviewStatus(String description) {
         this.description = description;
     }
 

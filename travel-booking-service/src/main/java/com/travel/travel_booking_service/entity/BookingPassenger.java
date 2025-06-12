@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.entity;
 
 import java.time.LocalDate;
 
+import com.travel.travel_booking_service.enums.PassengerType;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -26,27 +27,10 @@ public class BookingPassenger extends BaseEntity {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "gender", columnDefinition = "ENUM('male', 'female', 'other')")
-    private Gender gender;
+    @Column(name = "gender")
+    private String gender;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "passenger_type", nullable = false, columnDefinition = "ENUM('adult', 'children', 'child', 'baby')")
-    private PassengerType passengerType;
+    @Column(name = "passenger_type", nullable = false)
+    private String passengerType;
 
-    @Column(name = "special_requirements", columnDefinition = "TEXT")
-    private String specialRequirements;
-
-    public enum Gender {
-        MALE,
-        FEMALE,
-        OTHER
-    }
-
-    public enum PassengerType {
-        ADULT,
-        CHILDREN,
-        CHILD,
-        BABY
-    }
 }

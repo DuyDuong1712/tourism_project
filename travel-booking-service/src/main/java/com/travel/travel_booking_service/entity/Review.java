@@ -38,9 +38,8 @@ public class Review extends BaseEntity {
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "ENUM('approved', 'hidden') DEFAULT 'approved'")
-    private ReviewStatus status;
+    @Column(name = "status")
+    private String status;
 
     @OneToMany(
             mappedBy = "review",
@@ -49,8 +48,4 @@ public class Review extends BaseEntity {
             orphanRemoval = true)
     private List<ReviewImage> reviewImages = new ArrayList<>();
 
-    public enum ReviewStatus {
-        approved,
-        hidden
-    }
 }

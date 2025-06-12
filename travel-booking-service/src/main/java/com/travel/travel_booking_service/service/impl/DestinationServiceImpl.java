@@ -1,7 +1,7 @@
 package com.travel.travel_booking_service.service.impl;
 
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -178,12 +178,93 @@ public class DestinationServiceImpl implements DestinationService {
                 .collect(Collectors.toList());
     }
 
+//    @Override
+//    public List<DestinationResponse> getChildrenByParentId(Long id) {
+//        // Kiểm tra xem parentId có hợp lệ không
+//        if (id == null || !destinationRepository.existsById(id)) {
+//            return Collections.emptyList(); // Trả về danh sách rỗng nếu parentId không hợp lệ
+//        }
+//
+//        // Lấy danh sách destination con theo parentId
+//        List<Destination> destinations = destinationRepository.findByParentId(id);
+//
+//        // Nếu có destination con, chuyển đổi sang DestinationResponse
+//        if (!destinations.isEmpty()) {
+//            return destinations.stream()
+//                    .map(destinationMapper::toDestinationResponse)
+//                    .collect(Collectors.toList());
+//        }
+//
+//        // Nếu không có destination con, trả về chính destination tương ứng với parentId
+//        Optional<Destination> parentDestination = destinationRepository.findById(id);
+//        if (parentDestination.isPresent()) {
+//            return List.of(destinationMapper.toDestinationResponse(parentDestination.get()));
+//        }
+//
+//        // Trường hợp không tìm thấy parentDestination (dù đã kiểm tra existsById)
+//        return Collections.emptyList();
+//    }
+
     @Override
     public List<DestinationResponse> getChildrenByParentId(Long id) {
-        List<Destination> destinations = destinationRepository.findByParentId(id);
-        return destinations.stream()
+        // Kiểm tra parentId hợp lệ
+        if (id == null || !destinationRepository.existsById(id)) {
+            return Collections.emptyList();
+        }
+
+        // Lấy danh sách tất cả các destination là leaf nodes
+        List<Destination> leafDestinations = getAllLeafDescendants(id);
+
+        // Nếu không có leaf descendants, kiểm tra xem chính destination có phải là leaf không
+        if (leafDestinations.isEmpty()) {
+            Optional<Destination> parentDestination = destinationRepository.findById(id);
+            if (parentDestination.isPresent() && !destinationRepository.existsByParentId(id)) {
+                return List.of(destinationMapper.toDestinationResponse(parentDestination.get()));
+            }
+            return Collections.emptyList();
+        }
+
+        // Chuyển đổi danh sách leaf destinations sang DestinationResponse
+        return leafDestinations.stream()
                 .map(destinationMapper::toDestinationResponse)
                 .collect(Collectors.toList());
+    }
+
+    private List<Destination> getAllLeafDescendants(Long parentId) {
+        List<Destination> result = new ArrayList<>();
+        Set<Long> leafIds = new HashSet<>();
+
+        // Lấy tất cả descendants (bao gồm con, cháu,...)
+        List<Destination> descendants = getAllDescendants(parentId);
+
+        // Lọc các destination là leaf (không có con)
+        for (Destination dest : descendants) {
+            if (!destinationRepository.existsByParentId(dest.getId())) {
+                leafIds.add(dest.getId());
+            }
+        }
+
+        // Chuyển các destination có ID trong leafIds vào kết quả
+        for (Destination dest : descendants) {
+            if (leafIds.contains(dest.getId())) {
+                result.add(dest);
+            }
+        }
+
+        return result;
+    }
+
+    private List<Destination> getAllDescendants(Long parentId) {
+        List<Destination> result = new ArrayList<>();
+        List<Destination> children = destinationRepository.findByParentId(parentId);
+
+        // Duyệt đệ quy để lấy tất cả descendants
+        for (Destination child : children) {
+            result.add(child);
+            result.addAll(getAllDescendants(child.getId()));
+        }
+
+        return result;
     }
 
     @Override

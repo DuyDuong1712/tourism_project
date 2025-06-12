@@ -1,14 +1,14 @@
 package com.travel.travel_booking_service.enums;
 
-public enum PaymentStatus {
-    PENDING("Chờ xử lý"),
-    PAID("Đã thanh toán"),
-    REFUNDED("Đã hoàn tiền"),
-    FAILED("Thất bại");
+public enum RefundMethod {
+    CASH("Tiền mặt"),
+    BANK_TRANSFER("Ngân hàng"),
+    VNPAY("VNPay"),
+    MOMO("Momo");
 
     private final String description;
 
-    PaymentStatus(String description) {
+    RefundMethod(String description) {
         this.description = description;
     }
 

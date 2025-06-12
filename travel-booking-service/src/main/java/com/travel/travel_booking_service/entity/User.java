@@ -42,6 +42,9 @@ public class User extends BaseEntity {
     @Column(name = "in_active", columnDefinition = "TINYINT DEFAULT 1")
     private Boolean inActive;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private CustomerInfo customerInfo;
+
     @OneToMany(
             mappedBy = "customer",
             fetch = FetchType.LAZY,

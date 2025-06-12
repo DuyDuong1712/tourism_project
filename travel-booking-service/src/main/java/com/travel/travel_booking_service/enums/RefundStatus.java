@@ -1,14 +1,14 @@
 package com.travel.travel_booking_service.enums;
 
-public enum PaymentStatus {
+public enum RefundStatus {
+    NOT_APPLICABLE("Không áp dụng"),
     PENDING("Chờ xử lý"),
-    PAID("Đã thanh toán"),
-    REFUNDED("Đã hoàn tiền"),
+    COMPLETED("Hoàn tất"),
     FAILED("Thất bại");
 
     private final String description;
 
-    PaymentStatus(String description) {
+    RefundStatus(String description) {
         this.description = description;
     }
 

@@ -24,18 +24,9 @@ public class Notification extends BaseEntity {
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    @Enumerated(EnumType.STRING)
-    @Column(
-            name = "type",
-            nullable = false,
-            columnDefinition = "ENUM('booking', 'payment', 'system', 'promotion', 'reminder')")
-    private NotificationType type;
 
-    public enum NotificationType {
-        BOOKING,
-        PAYMENT,
-        SYSTEM,
-        PROMOTION,
-        REMINDER
-    }
+    @Column(name = "type", nullable = false)
+    private String type;
+
+
 }

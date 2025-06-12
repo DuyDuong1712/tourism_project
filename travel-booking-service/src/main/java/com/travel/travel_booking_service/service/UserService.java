@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.UserRequest;
+import com.travel.travel_booking_service.dto.response.CustomerInfoResponse;
 import com.travel.travel_booking_service.dto.response.UserResponse;
 
 public interface UserService {
@@ -45,4 +46,6 @@ public interface UserService {
     UserResponse getUserByUsername(String username);
 
     UserResponse registerAccount(UserRequest request);
+
+    CustomerInfoResponse getProfile();
 }

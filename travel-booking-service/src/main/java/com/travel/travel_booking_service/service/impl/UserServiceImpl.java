@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.UserRequest;
 import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
+import com.travel.travel_booking_service.dto.response.CustomerInfoResponse;
 import com.travel.travel_booking_service.dto.response.UserResponse;
 import com.travel.travel_booking_service.entity.Role;
 import com.travel.travel_booking_service.entity.User;
@@ -128,6 +132,7 @@ public class UserServiceImpl implements UserService {
         for (User user : users) {
             UserResponse userResponse = userMapper.toUserResponse(user);
             userResponse.setRole(user.getRole().getCode());
+            userResponse.setProfileImg(user.getProfileImg());
             userResponses.add(userResponse);
         }
 
@@ -207,6 +212,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public CustomerInfoResponse getProfile() {
+        // Lấy thông tin người dùng hiện tại từ SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Lấy thông tin user từ authentication.getPrincipal()
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof Jwt) {
+                Jwt jwt = (Jwt) principal;
+                // Lấy thông tin username hoặc các thuộc tính khác
+                // Gọi repository hoặc service để lấy thông tin chi tiết của user
+                String username = jwt.getSubject(); // hoặc jwt.getClaim("username")
+
+                User user = userRepository
+                        .findByUsername(username)
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+                CustomerInfoResponse customerInfoResponse = CustomerInfoResponse.builder()
+                        .id(user.getId())
+                        .fullname(user.getFullname())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .address(user.getCustomerInfo().getAddress())
+                        .gender(user.getCustomerInfo().getGender())
+                        .date_of_birth(user.getCustomerInfo().getDateOfBirth().toString())
+                        .id_card(user.getCustomerInfo().getIdCard())
+                        .passport(user.getCustomerInfo().getPassport())
+                        .country(user.getCustomerInfo().getCountry())
+                        .build();
+
+                return customerInfoResponse;
+            }
+        }
+        throw new RuntimeException("User not authenticated");
+    }
+
+    @Override
     public List<UserResponse> searchUsers(String keyword) {
         return List.of();
     }
@@ -220,66 +261,4 @@ public class UserServiceImpl implements UserService {
     public UserResponse getUserByUsername(String username) {
         return null;
     }
-
-    //    @Override
-    //    public UserResponse getUserById(Long id) {
-    //        return convertToResponse(userRepository.findById(id)
-    //                .orElseThrow(() -> new RuntimeException("User not found")));
-    //    }
-    //
-    //    @Override
-    //    @Transactional
-    //    public UserResponse updateUser(Long id, UserRequest request) {
-    //        User user = userRepository.findById(id)
-    //                .orElseThrow(() -> new RuntimeException("User not found"));
-    //
-    //        user.setUsername(request.getUsername());
-    //        user.setEmail(request.getEmail());
-    //        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-    //            user.setPassword(passwordEncoder.encode(request.getPassword()));
-    //        }
-    //        user.setFirstName(request.getFirstName());
-    //        user.setLastName(request.getLastName());
-    //        user.setPhone(request.getPhone());
-    //        user.setAddress(request.getAddress());
-    //
-    //        return convertToResponse(userRepository.save(user));
-    //    }
-    //
-    //    @Override
-    //    @Transactional
-    //    public void deleteUser(Long id) {
-    //        userRepository.deleteById(id);
-    //    }
-    //
-    //    @Override
-    //    public List<UserResponse> searchUsers(String keyword) {
-    //        return userRepository.searchUsers(keyword).stream()
-    //                .map(this::convertToResponse)
-    //                .collect(Collectors.toList());
-    //    }
-    //
-    //    @Override
-    //    public UserResponse getUserByEmail(String email) {
-    //        return convertToResponse(userRepository.findByEmail(email)
-    //                .orElseThrow(() -> new RuntimeException("User not found")));
-    //    }
-    //
-    //    @Override
-    //    public UserResponse getUserByUsername(String username) {
-    //        return convertToResponse(userRepository.findByUsername(username)
-    //                .orElseThrow(() -> new RuntimeException("User not found")));
-    //    }
-    //
-    //    private UserResponse convertToResponse(User user) {
-    //        return UserResponse.builder()
-    //                .id(user.getId())
-    //                .username(user.getUsername())
-    //                .email(user.getEmail())
-    //                .firstName(user.getFirstName())
-    //                .lastName(user.getLastName())
-    //                .phone(user.getPhone())
-    //                .address(user.getAddress())
-    //                .build();
-    //    }
 }
