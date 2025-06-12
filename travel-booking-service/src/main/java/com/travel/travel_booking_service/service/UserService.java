@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.service;
 
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.request.UpdateProfileRequest;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
@@ -48,4 +49,12 @@ public interface UserService {
     UserResponse registerAccount(UserRequest request);
 
     CustomerInfoResponse getProfile();
+
+//    CustomerInfoResponse updateProfile(String fullName, String address, String phoneNumber, String date_of_birth,
+//                                        String gender,
+//                                        String id_card,
+//                                        String passport,
+//                                        String country
+//                                       );
+    CustomerInfoResponse updateProfile(UpdateProfileRequest updateProfileRequest);
 }

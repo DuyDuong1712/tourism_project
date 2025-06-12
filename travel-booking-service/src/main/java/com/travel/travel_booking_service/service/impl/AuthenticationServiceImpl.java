@@ -6,6 +6,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.entity.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,10 +19,6 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.travel.travel_booking_service.dto.request.*;
 import com.travel.travel_booking_service.dto.response.*;
-import com.travel.travel_booking_service.entity.InvalidatedToken;
-import com.travel.travel_booking_service.entity.Role;
-import com.travel.travel_booking_service.entity.RolePermission;
-import com.travel.travel_booking_service.entity.User;
 import com.travel.travel_booking_service.enums.ErrorCode;
 import com.travel.travel_booking_service.enums.RoleEnum;
 import com.travel.travel_booking_service.exception.AppException;
@@ -80,17 +77,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             throw new AppException(ErrorCode.USER_EXISTS);
         }
 
-        // Tạo user mới
-        User user = User.builder()
-                .username(request.getUsername())
-                .fullname(request.getFullname())
-                .email(request.getEmail())
-                .phone(request.getPhone())
-                .build();
-
         // Mã hóa password
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         // Gán role CUSTOMER
         Role customerRole = roleRepository.findByCode(RoleEnum.CUSTOMER.name()).orElseGet(() -> {
@@ -101,10 +89,22 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             return roleRepository.save(role);
         });
 
-        // Gán role cho user
-        user.setRole(customerRole);
+        // Tạo user mới
+        User user = User.builder()
+                .username(request.getUsername())
+                .fullname(request.getFullname())
+                .email(request.getEmail())
+                .phone(request.getPhone())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(customerRole)
+                .build();
 
-        // Lưu user vào DB
+        // Tạo CustomerInfo và gán 2 chiều
+        CustomerInfo newCustomerInfo = new CustomerInfo();
+        newCustomerInfo.setUser(user);
+        user.setCustomerInfo(newCustomerInfo);
+
+        // Lưu user (và cascade lưu luôn customerInfo)
         userRepository.save(user);
 
         // Trả response

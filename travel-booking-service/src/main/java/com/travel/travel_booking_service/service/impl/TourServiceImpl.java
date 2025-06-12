@@ -269,8 +269,8 @@ public class TourServiceImpl implements TourService {
                         criteriaBuilder.greaterThanOrEqualTo(tourDetailJoin.get("dayStart"), today.atStartOfDay()));
             }
 
-            // Chỉ lấy các tour có trạng thái hợp lệ (scheduled, confirmed, in_progress)
-            predicates.add(tourDetailJoin.get("status").in(TourDetailStatus.SCHEDULED));
+            // Chỉ lấy các tour có trạng thái hợp lệ (scheduled)
+            predicates.add(tourDetailJoin.get("status").in(TourDetailStatus.SCHEDULED.name()));
 
             // Đảm bảo truy vấn trả về các kết quả khác nhau
             query.distinct(true);
@@ -301,7 +301,7 @@ public class TourServiceImpl implements TourService {
                                             && !detail.getDayStart()
                                                     .toLocalDate()
                                                     .isBefore(fromDate)))
-                            .filter(detail -> detail.getStatus() == TourDetailStatus.SCHEDULED.name())
+                            .filter(detail -> Objects.equals(detail.getStatus(), TourDetailStatus.SCHEDULED.name()))
                             .map(detail -> detail.getDayStart().toString())
                             .collect(Collectors.toList());
 
@@ -320,7 +320,7 @@ public class TourServiceImpl implements TourService {
                                             && !detail.getDayStart()
                                                     .toLocalDate()
                                                     .isBefore(fromDate)))
-                            .filter(detail -> detail.getStatus() == TourDetailStatus.SCHEDULED.name())
+                            .filter(detail -> Objects.equals(detail.getStatus(), TourDetailStatus.SCHEDULED.name()))
                             .findFirst()
                             .orElse(null);
 
@@ -417,7 +417,7 @@ public class TourServiceImpl implements TourService {
             }
 
             // Chỉ lấy các tour có trạng thái hợp lệ (scheduled, confirmed, in_progress)
-            predicates.add(tourDetailJoin.get("status").in(TourDetailStatus.SCHEDULED));
+            predicates.add(tourDetailJoin.get("status").in(TourDetailStatus.SCHEDULED.name()));
 
             // Đảm bảo truy vấn trả về các kết quả khác nhau
             query.distinct(true);
@@ -448,7 +448,7 @@ public class TourServiceImpl implements TourService {
                                             && !detail.getDayStart()
                                                     .toLocalDate()
                                                     .isBefore(fromDate)))
-                            .filter(detail -> detail.getStatus() == TourDetailStatus.SCHEDULED.name())
+                            .filter(detail -> Objects.equals(detail.getStatus(), TourDetailStatus.SCHEDULED.name()))
                             .map(detail -> detail.getDayStart().toString())
                             .collect(Collectors.toList());
 

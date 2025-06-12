@@ -51,53 +51,76 @@ public class PaymentController {
 
     @GetMapping("/payment-info")
     public ResponseEntity<TransactionStatus> handlePaymentCallback(HttpServletRequest request) {
-        // Lấy các tham số từ VNPay
-        Map<String, String> fields = new HashMap<>();
-        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
-            String fieldName = params.nextElement();
-            String fieldValue = request.getParameter(fieldName);
-            if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                fields.put(fieldName, fieldValue);
+        try {
+            // Lấy các tham số từ VNPay
+            Map<String, String> fields = new HashMap<>();
+            for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
+                String fieldName = params.nextElement();
+                String fieldValue = request.getParameter(fieldName);
+                if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                    fields.put(fieldName, fieldValue);
+                }
             }
-        }
 
-        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        fields.remove("vnp_SecureHashType");
-        fields.remove("vnp_SecureHash");
+            String vnp_SecureHash = request.getParameter("vnp_SecureHash");
+            fields.remove("vnp_SecureHashType");
+            fields.remove("vnp_SecureHash");
 
-        // Kiểm tra chữ ký bảo mật
-        String signValue = VNPAYConfig.hashAllFields(fields);
-        TransactionStatus transactionStatus = new TransactionStatus();
+            // Kiểm tra chữ ký bảo mật
+            String signValue = VNPAYConfig.hashAllFields(fields);
+            TransactionStatus transactionStatus = new TransactionStatus();
 
-        if (signValue.equals(vnp_SecureHash)) {
-            String responseCode = request.getParameter("vnp_ResponseCode");
-            String orderInfo = request.getParameter("vnp_OrderInfo");
-            String amount = request.getParameter("vnp_Amount");
-            String bankCode = request.getParameter("vnp_BankCode");
-            String payDate = request.getParameter("vnp_PayDate");
+            if (signValue.equals(vnp_SecureHash)) {
+                String responseCode = request.getParameter("vnp_ResponseCode");
+                String orderInfo = request.getParameter("vnp_OrderInfo");
+                String amount = request.getParameter("vnp_Amount");
+                String bankCode = request.getParameter("vnp_BankCode");
+                String payDate = request.getParameter("vnp_PayDate");
+                String txnRef = request.getParameter("vnp_TxnRef");
 
-            if ("00".equals(responseCode)) {
-                // Thanh toán thành công
-                // Lấy bookingId từ orderInfo (giả sử orderInfo có định dạng "Thanh toan don hang:bookingId")
-                String bookingId = orderInfo.replace("Thanh toan don hang:", "");
-                bookingService.updateBookingStatus(Long.parseLong(bookingId), "SUCCESS");
+                if ("00".equals(responseCode)) {
+                    // Thanh toán thành công
+                    try {
+                        // Lấy bookingId từ orderInfo (định dạng "Thanh toan don hang:bookingId")
+                        String bookingId = orderInfo.replace("Thanh toan don hang:", "").trim();
+                        bookingService.updateBookingStatus(Long.parseLong(bookingId), "SUCCESS");
 
-                transactionStatus.setStatus("success");
-                transactionStatus.setMessage("Payment successful");
-                transactionStatus.setData("Order Info: " + orderInfo + ", Amount: " + (Long.parseLong(amount) / 100) + ", Bank: " + bankCode + ", Date: " + payDate);
+                        transactionStatus.setStatus("success");
+                        transactionStatus.setMessage("Payment successful");
+                        transactionStatus.setData("Booking ID: " + bookingId + ", Amount: " + (Long.parseLong(amount) / 100) + " VND, Transaction: " + txnRef);
+                    } catch (NumberFormatException e) {
+                        transactionStatus.setStatus("failed");
+                        transactionStatus.setMessage("Invalid booking ID format");
+                        transactionStatus.setData("");
+                    }
+                } else {
+                    // Thanh toán thất bại
+                    try {
+                        String bookingId = orderInfo.replace("Thanh toan don hang:", "").trim();
+                        bookingService.updateBookingStatus(Long.parseLong(bookingId), "FAILED");
+                    } catch (Exception e) {
+                        // Log error but continue
+                        System.err.println("Error updating failed booking status: " + e.getMessage());
+                    }
+
+                    transactionStatus.setStatus("failed");
+                    transactionStatus.setMessage("Payment failed with code: " + responseCode);
+                    transactionStatus.setData("Transaction Ref: " + txnRef);
+                }
             } else {
-                // Thanh toán thất bại
+                // Chữ ký không hợp lệ
                 transactionStatus.setStatus("failed");
-                transactionStatus.setMessage("Payment failed with code: " + responseCode);
+                transactionStatus.setMessage("Invalid signature");
                 transactionStatus.setData("");
             }
-        } else {
-            // Chữ ký không hợp lệ
-            transactionStatus.setStatus("failed");
-            transactionStatus.setMessage("Invalid signature");
-            transactionStatus.setData("");
-        }
 
-        return ResponseEntity.ok(transactionStatus);
+            return ResponseEntity.ok(transactionStatus);
+        } catch (Exception e) {
+            TransactionStatus errorStatus = new TransactionStatus();
+            errorStatus.setStatus("error");
+            errorStatus.setMessage("Error processing payment callback: " + e.getMessage());
+            errorStatus.setData("");
+            return ResponseEntity.ok(errorStatus);
+        }
     }
 }

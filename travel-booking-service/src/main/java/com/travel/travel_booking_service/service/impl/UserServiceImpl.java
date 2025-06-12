@@ -1,9 +1,15 @@
 package com.travel.travel_booking_service.service.impl;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.travel.travel_booking_service.dto.request.UpdateProfileRequest;
+import com.travel.travel_booking_service.entity.CustomerInfo;
+import com.travel.travel_booking_service.repository.CustomerInfoRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,8 +45,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserServiceImpl implements UserService {
 
+
     UserRepository userRepository;
     RoleRepository roleRepository;
+    CustomerInfoRepository customerInfoRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     UploadImageFile uploadImageFile;
@@ -235,7 +243,9 @@ public class UserServiceImpl implements UserService {
                         .phone(user.getPhone())
                         .address(user.getCustomerInfo().getAddress())
                         .gender(user.getCustomerInfo().getGender())
-                        .date_of_birth(user.getCustomerInfo().getDateOfBirth().toString())
+                        .date_of_birth(user.getCustomerInfo().getDateOfBirth() != null
+                                ? user.getCustomerInfo().getDateOfBirth().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                : null)
                         .id_card(user.getCustomerInfo().getIdCard())
                         .passport(user.getCustomerInfo().getPassport())
                         .country(user.getCustomerInfo().getCountry())
@@ -246,6 +256,183 @@ public class UserServiceImpl implements UserService {
         }
         throw new RuntimeException("User not authenticated");
     }
+
+//    @Override
+//    public CustomerInfoResponse updateProfile(String fullName, String address, String phoneNumber, String dateOfBirth, String gender, String idCard, String passport, String country) {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        User currentUser = userRepository.findByUsername(username)
+//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+//
+//        // Lấy hoặc tạo mới CustomerInfo
+//        CustomerInfo customerInfo = customerInfoRepository.findByUser(currentUser)
+//                .orElseGet(() -> {
+//                    CustomerInfo newCustomerInfo = new CustomerInfo();
+//                    newCustomerInfo.setUser(currentUser);
+//                    return customerInfoRepository.save(newCustomerInfo);
+//                });
+//
+//        // Cập nhật các trường nếu có
+//        if (fullName != null && !fullName.trim().isEmpty()) {
+//            currentUser.setFullname(fullName.trim());
+//        }
+//
+//        if (phoneNumber != null && !phoneNumber.trim().isEmpty()) {
+//            if (!phoneNumber.matches("\\d{10}")) {
+//                throw new IllegalArgumentException("Số điện thoại không hợp lệ");
+//            }
+//            currentUser.setPhone(phoneNumber);
+//        }
+//
+//        if (dateOfBirth != null && !dateOfBirth.trim().isEmpty()) {
+//            try {
+//                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//                LocalDate parsedDate = LocalDate.parse(dateOfBirth, formatter);
+//                customerInfo.setDateOfBirth(parsedDate.atStartOfDay()); // dùng LocalDateTime
+//            } catch (DateTimeParseException e) {
+//                throw new IllegalArgumentException("Định dạng ngày sinh không hợp lệ (yyyy-MM-dd)");
+//            }
+//        }
+//
+//        if (gender != null && !gender.trim().isEmpty()) {
+//            if (!gender.equalsIgnoreCase("NAM") && !gender.equalsIgnoreCase("NỮ")) {
+//                throw new IllegalArgumentException("Giới tính không hợp lệ (MALE hoặc FEMALE)");
+//            }
+//            customerInfo.setGender(gender.toUpperCase());
+//        }
+//
+//        if (idCard != null && !idCard.trim().isEmpty()) {
+//            if (!idCard.matches("\\d{12}")) {
+//                throw new IllegalArgumentException("CMND/CCCD không hợp lệ");
+//            }
+//            customerInfo.setIdCard(idCard);
+//        }
+//
+//        if (passport != null && !passport.trim().isEmpty()) {
+//            if (!passport.matches("[A-Z0-9]{8}")) {
+//                throw new IllegalArgumentException("Hộ chiếu không hợp lệ");
+//            }
+//            customerInfo.setPassport(passport);
+//        }
+//
+//        if (address != null && !address.trim().isEmpty()) {
+//            customerInfo.setAddress(address.trim());
+//        }
+//
+//        if (country != null && !country.trim().isEmpty()) {
+//            customerInfo.setCountry(country.trim());
+//        }
+//
+//        // Gán lại nếu user chưa gán customerInfo
+//        if (currentUser.getCustomerInfo() == null) {
+//            currentUser.setCustomerInfo(customerInfo);
+//        }
+//
+//        // Lưu thông tin
+//        userRepository.save(currentUser); // do cascade nên customerInfo cũng sẽ được lưu
+//
+//        return CustomerInfoResponse.builder()
+//                .fullname(currentUser.getFullname())
+//                .address(customerInfo.getAddress())
+//                .phone(currentUser.getPhone())
+//                .date_of_birth(customerInfo.getDateOfBirth() != null
+//                        ? customerInfo.getDateOfBirth().toLocalDate().toString() : null)
+//                .gender(customerInfo.getGender())
+//                .id_card(customerInfo.getIdCard())
+//                .passport(customerInfo.getPassport())
+//                .country(customerInfo.getCountry())
+//                .build();
+//    }
+
+    @Override
+    public CustomerInfoResponse updateProfile(UpdateProfileRequest updateProfileRequest) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Lấy hoặc tạo mới CustomerInfo
+        CustomerInfo customerInfo = customerInfoRepository.findByUser(currentUser)
+                .orElseGet(() -> {
+                    CustomerInfo newCustomerInfo = new CustomerInfo();
+                    newCustomerInfo.setUser(currentUser);
+                    return customerInfoRepository.save(newCustomerInfo);
+                });
+
+        // Cập nhật các trường nếu có
+        if (updateProfileRequest.getFullName() != null && !updateProfileRequest.getFullName().trim().isEmpty()) {
+            currentUser.setFullname(updateProfileRequest.getFullName().trim());
+        }
+
+        if (updateProfileRequest.getPhoneNumber() != null && !updateProfileRequest.getPhoneNumber().trim().isEmpty()) {
+            if (!updateProfileRequest.getPhoneNumber().matches("\\d{10}")) {
+                throw new IllegalArgumentException("Số điện thoại không hợp lệ");
+            }
+            currentUser.setPhone(updateProfileRequest.getPhoneNumber());
+        }
+
+        if (updateProfileRequest.getDate_of_birth() != null && !updateProfileRequest.getDate_of_birth().trim().isEmpty()) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                LocalDate parsedDate = LocalDate.parse(updateProfileRequest.getDate_of_birth(), formatter);
+                customerInfo.setDateOfBirth(parsedDate.atStartOfDay()); // dùng LocalDateTime
+            } catch (DateTimeParseException e) {
+                throw new IllegalArgumentException("Định dạng ngày sinh không hợp lệ (yyyy-MM-dd)");
+            }
+        }
+
+        if (updateProfileRequest.getGender() != null && !updateProfileRequest.getGender().trim().isEmpty()) {
+            if (!updateProfileRequest.getGender().equalsIgnoreCase("NAM") && !updateProfileRequest.getGender().equalsIgnoreCase("NỮ")) {
+                throw new IllegalArgumentException("Giới tính không hợp lệ (MALE hoặc FEMALE)");
+            }
+            customerInfo.setGender(updateProfileRequest.getGender().toUpperCase());
+        }
+
+        if (updateProfileRequest.getId_card() != null && !updateProfileRequest.getId_card().trim().isEmpty()) {
+            if (!updateProfileRequest.getId_card().matches("\\d{12}")) {
+                throw new IllegalArgumentException("CMND/CCCD không hợp lệ");
+            }
+            customerInfo.setIdCard(updateProfileRequest.getId_card());
+        }
+
+        if (updateProfileRequest.getPassport() != null && !updateProfileRequest.getPassport().trim().isEmpty()) {
+            if (!updateProfileRequest.getPassport().matches("[A-Z0-9]{8}")) {
+                throw new IllegalArgumentException("Hộ chiếu không hợp lệ");
+            }
+            customerInfo.setPassport(updateProfileRequest.getPassport());
+        }
+
+        if (updateProfileRequest.getAddress() != null && !updateProfileRequest.getAddress().trim().isEmpty()) {
+            customerInfo.setAddress(updateProfileRequest.getAddress().trim());
+        }
+
+        if (updateProfileRequest.getCountry() != null && !updateProfileRequest.getCountry().trim().isEmpty()) {
+            customerInfo.setCountry(updateProfileRequest.getCountry().trim());
+        }
+
+        // Gán lại nếu user chưa gán customerInfo
+        if (currentUser.getCustomerInfo() == null) {
+            currentUser.setCustomerInfo(customerInfo);
+        }
+
+        // Lưu thông tin
+        userRepository.save(currentUser); // do cascade nên customerInfo cũng sẽ được lưu
+
+        return CustomerInfoResponse.builder()
+                .fullname(currentUser.getFullname())
+                .address(customerInfo.getAddress())
+                .phone(currentUser.getPhone())
+                .date_of_birth(customerInfo.getDateOfBirth() != null
+                        ? customerInfo.getDateOfBirth().toLocalDate().toString() : null)
+                .gender(customerInfo.getGender())
+                .id_card(customerInfo.getIdCard())
+                .passport(customerInfo.getPassport())
+                .country(customerInfo.getCountry())
+                .build();
+    }
+
 
     @Override
     public List<UserResponse> searchUsers(String keyword) {

@@ -27,6 +27,5 @@ public class BookingRequest {
     Long discountAmount;
     Long finalPrice;
     String note;
-    String paymentMethod;
     List<PassengerRequest> passengers;
 }

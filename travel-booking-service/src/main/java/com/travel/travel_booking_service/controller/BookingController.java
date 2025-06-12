@@ -38,7 +38,11 @@ public class BookingController {
 
     @PostMapping("/pending")
     public ResponseEntity<String> createPendingBooking(@RequestBody BookingRequest bookingRequest) {
-        String bookingId = bookingService.createPendingBooking(bookingRequest);
-        return ResponseEntity.ok(bookingId);
+        try {
+            String bookingId = bookingService.createPendingBooking(bookingRequest);
+            return ResponseEntity.ok(bookingId);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error creating booking: " + e.getMessage());
+        }
     }
 }

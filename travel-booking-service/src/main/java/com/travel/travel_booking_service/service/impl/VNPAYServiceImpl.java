@@ -46,7 +46,7 @@ public class VNPAYServiceImpl implements VNPAYService {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", paymentRequest.getOrderInfo());
+        vnp_Params.put("vnp_OrderInfo", paymentRequest.getOrderInfo()); // Sử dụng orderInfo từ request
         vnp_Params.put("vnp_OrderType", orderType);
 
         //        vnp_Params.put("vnp_Locale", "vn");
