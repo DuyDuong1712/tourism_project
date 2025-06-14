@@ -11,5 +11,4 @@ public class PaymentRequest {
     private Long amount;
     private String language;
     private String orderInfo;
-
 }

@@ -47,5 +47,4 @@ public class Review extends BaseEntity {
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             orphanRemoval = true)
     private List<ReviewImage> reviewImages = new ArrayList<>();
-
 }

@@ -68,15 +68,11 @@ public class Booking extends BaseEntity {
     @Column(name = "note", columnDefinition = "TEXT")
     String note;
 
-
     @Column(name = "booking_status")
     String bookingStatus;
 
     @Column(name = "payment_status")
     String paymentStatus;
-
-    @Column(name = "special_requests", columnDefinition = "TEXT")
-    String specialRequests;
 
     @Column(name = "confirmed_at")
     LocalDateTime confirmedAt;
@@ -108,7 +104,6 @@ public class Booking extends BaseEntity {
 
     @Column(name = "refund_date")
     LocalDateTime refundDate;
-
 
     @Column(name = "refund_status")
     String refundStatus;

@@ -1,6 +1,5 @@
 package com.travel.travel_booking_service.controller.admin;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -100,11 +99,18 @@ public class AdminTourController {
             @RequestParam(required = false) Boolean inActive,
             @RequestParam(required = false) Boolean isFeatured,
             @RequestParam(required = false) String title,
-            @RequestParam(required = false) String fromDate
-    ) {
+            @RequestParam(required = false) String fromDate) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.<List<TourDetailResponse>>builder()
-                        .data(tourService.getAllToursWithDetails(destinationId, departureId, transportationId, categoryId, inActive, isFeatured, title, fromDate))
+                        .data(tourService.getAllToursWithDetails(
+                                destinationId,
+                                departureId,
+                                transportationId,
+                                categoryId,
+                                inActive,
+                                isFeatured,
+                                title,
+                                fromDate))
                         .build());
     }
 
@@ -188,9 +194,7 @@ public class AdminTourController {
     public ResponseEntity<ApiResponse<StatisticResponse>> getTourStatistics() {
         StatisticResponse statistics = tourService.getTourStatistics();
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<StatisticResponse>builder()
-                        .data(statistics)
-                        .build());
+                .body(ApiResponse.<StatisticResponse>builder().data(statistics).build());
     }
 
     @GetMapping("/details/expired-soon")

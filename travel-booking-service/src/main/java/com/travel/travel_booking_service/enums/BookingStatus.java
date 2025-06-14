@@ -1,8 +1,5 @@
 package com.travel.travel_booking_service.enums;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 public enum BookingStatus {
     PENDING("Đang chờ xử lý"),
     CONFIRMED("Đã xác nhận"),

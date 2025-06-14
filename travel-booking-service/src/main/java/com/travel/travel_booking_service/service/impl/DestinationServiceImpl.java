@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.CloudinaryUploadResponse;
 import com.travel.travel_booking_service.dto.response.DestinationResponse;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import com.travel.travel_booking_service.entity.Destination;
 import com.travel.travel_booking_service.enums.ErrorCode;
 import com.travel.travel_booking_service.exception.AppException;
@@ -179,32 +179,32 @@ public class DestinationServiceImpl implements DestinationService {
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    public List<DestinationResponse> getChildrenByParentId(Long id) {
-//        // Kiểm tra xem parentId có hợp lệ không
-//        if (id == null || !destinationRepository.existsById(id)) {
-//            return Collections.emptyList(); // Trả về danh sách rỗng nếu parentId không hợp lệ
-//        }
-//
-//        // Lấy danh sách destination con theo parentId
-//        List<Destination> destinations = destinationRepository.findByParentId(id);
-//
-//        // Nếu có destination con, chuyển đổi sang DestinationResponse
-//        if (!destinations.isEmpty()) {
-//            return destinations.stream()
-//                    .map(destinationMapper::toDestinationResponse)
-//                    .collect(Collectors.toList());
-//        }
-//
-//        // Nếu không có destination con, trả về chính destination tương ứng với parentId
-//        Optional<Destination> parentDestination = destinationRepository.findById(id);
-//        if (parentDestination.isPresent()) {
-//            return List.of(destinationMapper.toDestinationResponse(parentDestination.get()));
-//        }
-//
-//        // Trường hợp không tìm thấy parentDestination (dù đã kiểm tra existsById)
-//        return Collections.emptyList();
-//    }
+    //    @Override
+    //    public List<DestinationResponse> getChildrenByParentId(Long id) {
+    //        // Kiểm tra xem parentId có hợp lệ không
+    //        if (id == null || !destinationRepository.existsById(id)) {
+    //            return Collections.emptyList(); // Trả về danh sách rỗng nếu parentId không hợp lệ
+    //        }
+    //
+    //        // Lấy danh sách destination con theo parentId
+    //        List<Destination> destinations = destinationRepository.findByParentId(id);
+    //
+    //        // Nếu có destination con, chuyển đổi sang DestinationResponse
+    //        if (!destinations.isEmpty()) {
+    //            return destinations.stream()
+    //                    .map(destinationMapper::toDestinationResponse)
+    //                    .collect(Collectors.toList());
+    //        }
+    //
+    //        // Nếu không có destination con, trả về chính destination tương ứng với parentId
+    //        Optional<Destination> parentDestination = destinationRepository.findById(id);
+    //        if (parentDestination.isPresent()) {
+    //            return List.of(destinationMapper.toDestinationResponse(parentDestination.get()));
+    //        }
+    //
+    //        // Trường hợp không tìm thấy parentDestination (dù đã kiểm tra existsById)
+    //        return Collections.emptyList();
+    //    }
 
     @Override
     public List<DestinationResponse> getChildrenByParentId(Long id) {
@@ -280,7 +280,10 @@ public class DestinationServiceImpl implements DestinationService {
         Long activeCount = destinationRepository.countByInActiveTrue();
         Long inActiveCount = destinationRepository.countByInActiveFalse();
 
-        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
+        return StatisticResponse.builder()
+                .active(activeCount)
+                .inactive(inActiveCount)
+                .build();
     }
 
     @Override

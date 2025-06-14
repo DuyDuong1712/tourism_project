@@ -2,7 +2,6 @@ package com.travel.travel_booking_service.entity;
 
 import java.time.LocalDate;
 
-import com.travel.travel_booking_service.enums.PassengerType;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -32,5 +31,4 @@ public class BookingPassenger extends BaseEntity {
 
     @Column(name = "passenger_type", nullable = false)
     private String passengerType;
-
 }

@@ -3,12 +3,12 @@ package com.travel.travel_booking_service.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.TransportRequest;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import com.travel.travel_booking_service.dto.response.TransportResponse;
 import com.travel.travel_booking_service.entity.Transport;
 import com.travel.travel_booking_service.enums.ErrorCode;
@@ -86,6 +86,9 @@ public class TransportServiceImpl implements TransportService {
         Long activeCount = transportRepository.countByInActiveTrue();
         Long inActiveCount = transportRepository.countByInActiveFalse();
 
-        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
+        return StatisticResponse.builder()
+                .active(activeCount)
+                .inactive(inActiveCount)
+                .build();
     }
 }

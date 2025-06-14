@@ -14,7 +14,9 @@ import com.travel.travel_booking_service.entity.TourDetail;
 @Repository
 public interface TourRepository extends JpaRepository<Tour, Long>, JpaSpecificationExecutor<Tour> {
 
-    List<Tour> findByTourDetails(List<TourDetail> tourDetails);
+    Tour findByTourDetails(List<TourDetail> tourDetails);
+
+    Tour findByTourDetails_Id(Long tourDetailsId);
 
     @Query(
             """
@@ -41,5 +43,4 @@ public interface TourRepository extends JpaRepository<Tour, Long>, JpaSpecificat
     Long countByInActiveTrue();
 
     Long countByInActiveFalse();
-
 }

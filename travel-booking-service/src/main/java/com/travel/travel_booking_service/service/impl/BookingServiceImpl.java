@@ -2,31 +2,26 @@ package com.travel.travel_booking_service.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.travel.travel_booking_service.dto.response.CustomerViewBookingResponse;
-import com.travel.travel_booking_service.entity.Booking;
-import com.travel.travel_booking_service.entity.BookingPassenger;
-import com.travel.travel_booking_service.entity.TourDetail;
-import com.travel.travel_booking_service.entity.User;
-import com.travel.travel_booking_service.enums.*;
-import com.travel.travel_booking_service.exception.AppException;
-import com.travel.travel_booking_service.repository.BookingPassengerRepository;
-import com.travel.travel_booking_service.repository.BookingRepository;
-import com.travel.travel_booking_service.repository.TourDetailRepository;
-import com.travel.travel_booking_service.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import com.travel.travel_booking_service.dto.response.*;
+import com.travel.travel_booking_service.entity.*;
+import com.travel.travel_booking_service.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.travel.travel_booking_service.dto.request.BookingRequest;
-import com.travel.travel_booking_service.dto.response.BookingResponse;
+import com.travel.travel_booking_service.enums.*;
+import com.travel.travel_booking_service.exception.AppException;
 import com.travel.travel_booking_service.service.BookingService;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -35,27 +30,133 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class BookingServiceImpl implements BookingService {
 
-
     TourDetailRepository tourDetailRepository;
     UserRepository userRepository;
     BookingRepository bookingRepository;
     BookingPassengerRepository bookingPassengerRepository;
+    private final TourRepository tourRepository;
 
+    @Override
+    public List<BookingResponse> getAllBookings() {
+        List<Booking> bookings = bookingRepository.findAll();
 
+        List<BookingResponse> bookingResponses = new ArrayList<>();
+
+        for (Booking booking : bookings) {
+            BookingResponse bookingResponse = BookingResponse.builder()
+                    .id(booking.getId())
+                    .tourDetailId(booking.getTourDetail().getId())
+                    .customerId(booking.getCustomer().getId())
+                    .fullName(booking.getFullName())
+                    .email(booking.getEmail())
+                    .phoneNumber(booking.getPhoneNumber())
+                    .address(booking.getAddress())
+                    .adultCount(booking.getAdultCount())
+                    .childrenCount(booking.getChildrenCount())
+                    .childCount(booking.getChildCount())
+                    .babyCount(booking.getBabyCount())
+                    .totalPeople(booking.getTotalPeople())
+                    .singleRoomCount(booking.getSingleRoomCount())
+                    .subtotal(booking.getSubtotal())
+                    .discountAmount(booking.getDiscountAmount())
+                    .totalAmount(booking.getTotalAmount())
+                    .note(booking.getNote())
+                    .bookingStatus(booking.getBookingStatus())
+                    .paymentStatus(booking.getPaymentStatus())
+                    .confirmedAt(booking.getConfirmedAt())
+                    .cancelledAt(booking.getCancelledAt())
+                    .cancellationReason(booking.getCancellationReason())
+                    .cancelledBy(booking.getCancelledBy())
+                    .transactionId(booking.getTransactionId())
+                    .paymentDate(booking.getPaymentDate())
+                    .paymentDescription(booking.getPaymentDescription())
+                    .refundAmount(booking.getRefundAmount())
+                    .refundPercent(booking.getRefundPercent())
+                    .refundDate(booking.getRefundDate())
+                    .refundStatus(booking.getRefundStatus())
+                    .refundTransactionId(booking.getRefundTransactionId())
+                    .refundNote(booking.getRefundNote())
+                    .createdDate(booking.getCreatedDate())
+                    .modifiedDate(booking.getModifiedDate())
+                    .createdBy(booking.getCreatedBy())
+                    .modifiedBy(booking.getModifiedBy())
+                    .build();
+
+            bookingResponses.add(bookingResponse);
+        }
+
+        return bookingResponses;
+    }
+
+    @Override
+    public BookingResponse getBookingDetail(Long id) {
+        Booking booking = bookingRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        TourDetail tourDetail = booking.getTourDetail();
+
+        BookingResponse bookingResponse = BookingResponse.builder()
+                .id(booking.getId())
+                .tourId(tourDetail.getTour().getId())
+                .tourDetailId(booking.getTourDetail().getId())
+                .customerId(booking.getCustomer().getId())
+                .fullName(booking.getFullName())
+                .email(booking.getEmail())
+                .phoneNumber(booking.getPhoneNumber())
+                .address(booking.getAddress())
+                .adultCount(booking.getAdultCount())
+                .childrenCount(booking.getChildrenCount())
+                .childCount(booking.getChildCount())
+                .babyCount(booking.getBabyCount())
+                .totalPeople(booking.getTotalPeople())
+                .singleRoomCount(booking.getSingleRoomCount())
+                .adultPrice(tourDetail.getAdultPrice())
+                .childrenPrice(tourDetail.getChildrenPrice())
+                .childPrice(tourDetail.getChildPrice())
+                .babyPrice(tourDetail.getBabyPrice())
+                .subtotal(booking.getSubtotal())
+                .discountAmount(booking.getDiscountAmount())
+                .totalAmount(booking.getTotalAmount())
+                .note(booking.getNote())
+                .bookingStatus(booking.getBookingStatus())
+                .paymentStatus(booking.getPaymentStatus())
+                .confirmedAt(booking.getConfirmedAt())
+                .cancelledAt(booking.getCancelledAt())
+                .cancellationReason(booking.getCancellationReason())
+                .cancelledBy(booking.getCancelledBy())
+                .transactionId(booking.getTransactionId())
+                .paymentDate(booking.getPaymentDate())
+                .paymentDescription(booking.getPaymentDescription())
+                .refundAmount(booking.getRefundAmount())
+                .refundPercent(booking.getRefundPercent())
+                .refundDate(booking.getRefundDate())
+                .refundStatus(booking.getRefundStatus())
+                .refundTransactionId(booking.getRefundTransactionId())
+                .refundNote(booking.getRefundNote())
+                .createdDate(booking.getCreatedDate())
+                .modifiedDate(booking.getModifiedDate())
+                .createdBy(booking.getCreatedBy())
+                .modifiedBy(booking.getModifiedBy())
+                .build();
+
+        return bookingResponse;
+    }
 
     @Override
     public String createPendingBooking(BookingRequest bookingRequest) {
 
         // Validate tour detail exists
-        TourDetail tourDetail = tourDetailRepository.findByIdForUpdate(bookingRequest.getTourDetailId())
+        TourDetail tourDetail = tourDetailRepository
+                .findByIdForUpdate(bookingRequest.getTourDetailId())
                 .orElseThrow(() -> new AppException(ErrorCode.TOUR_NOT_FOUND));
 
-//        Kiểm tra số slot còn trống
+        //        Kiểm tra số slot còn trống
         int remainingSlots = tourDetail.getRemainingSlots();
-        int totalPassengers = bookingRequest.getAdultQuantity() +
-                bookingRequest.getChildrenQuantity() +
-                bookingRequest.getChildQuantity() +
-                bookingRequest.getBabyQuantity();
+        int totalPassengers = bookingRequest.getAdultQuantity()
+                + bookingRequest.getChildrenQuantity()
+                + bookingRequest.getChildQuantity()
+                + bookingRequest.getBabyQuantity();
 
         if (totalPassengers > remainingSlots) {
             throw new AppException(ErrorCode.NOT_ENOUGH_SLOTS);
@@ -65,7 +166,8 @@ public class BookingServiceImpl implements BookingService {
         tourDetailRepository.save(tourDetail);
 
         // Validate user exists
-        User customer = userRepository.findById(bookingRequest.getUserId())
+        User customer = userRepository
+                .findById(bookingRequest.getUserId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         try {
@@ -88,17 +190,21 @@ public class BookingServiceImpl implements BookingService {
                     .note(bookingRequest.getNote())
                     .bookingStatus(BookingStatus.PENDING.name())
                     .paymentStatus(PaymentStatus.PENDING.name())
+                    .refundStatus(RefundStatus.NOT_APPLICABLE.name())
                     .build();
 
             Booking savedBooking = bookingRepository.save(booking);
 
             // Lưu passengers với proper validation
-            if (bookingRequest.getPassengers() != null && !bookingRequest.getPassengers().isEmpty()) {
+            if (bookingRequest.getPassengers() != null
+                    && !bookingRequest.getPassengers().isEmpty()) {
                 List<BookingPassenger> passengers = bookingRequest.getPassengers().stream()
-                        .filter(dto -> dto.getFullname() != null && !dto.getFullname().trim().isEmpty())
+                        .filter(dto -> dto.getFullname() != null
+                                && !dto.getFullname().trim().isEmpty())
                         .map(dto -> {
                             LocalDate birthDate = null;
-                            if (dto.getBirthDate() != null && !dto.getBirthDate().trim().isEmpty()) {
+                            if (dto.getBirthDate() != null
+                                    && !dto.getBirthDate().trim().isEmpty()) {
                                 try {
                                     birthDate = LocalDate.parse(dto.getBirthDate());
                                 } catch (Exception e) {
@@ -111,7 +217,8 @@ public class BookingServiceImpl implements BookingService {
                                     .booking(savedBooking)
                                     .fullName(dto.getFullname())
                                     .dateOfBirth(birthDate)
-                                    .gender(Gender.valueOf(dto.getGender().toUpperCase()).getDescription())
+                                    .gender(Gender.valueOf(dto.getGender().toUpperCase())
+                                            .getDescription())
                                     .passengerType(birthDate != null ? calculatePassengerType(birthDate) : "ADULT")
                                     .build();
                         })
@@ -131,7 +238,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public void updateBookingStatus(Long id, String status, String transactionId) {
-        Booking booking = bookingRepository.findById(id)
+        Booking booking = bookingRepository
+                .findById(id)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + id));
 
         TourDetail tourDetail = booking.getTourDetail();
@@ -159,7 +267,6 @@ public class BookingServiceImpl implements BookingService {
         bookingRepository.save(booking);
     }
 
-
     private String calculatePassengerType(LocalDate birthDate) {
         if (birthDate == null) {
             return PassengerType.ADULT.getDescription();
@@ -186,8 +293,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public CustomerViewBookingResponse getBookingById(Long id) {
-        Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        Booking booking =
+                bookingRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
         TourDetail tourDetail = booking.getTourDetail();
 
@@ -215,5 +322,72 @@ public class BookingServiceImpl implements BookingService {
                 .build();
 
         return customerViewBookingResponse;
+    }
+
+    @Override
+    public BookingStatisticResponse getBookingStatistics() {
+        List<Booking> bookings = bookingRepository.findAll();
+
+        // Sử dụng Map để nhóm dữ liệu theo (month, year)
+        Map<String, List<Booking>> groupedByMonthYear = bookings.stream()
+                .filter(b -> b.getCreatedDate() != null)
+                .collect(Collectors.groupingBy(b -> {
+                    LocalDateTime createdAt = b.getCreatedDate();
+                    return createdAt.getMonthValue() + "-" + createdAt.getYear(); // key: "6-2025"
+                }));
+
+        List<RevenueStatistic> revenueStatistics = new ArrayList<>();
+        List<CancelRateStatistic> cancelRateStatistics = new ArrayList<>();
+        List<BookingCountStatistic> bookingCountStatistics = new ArrayList<>();
+
+        for (Map.Entry<String, List<Booking>> entry : groupedByMonthYear.entrySet()) {
+            String[] parts = entry.getKey().split("-");
+            int month = Integer.parseInt(parts[0]);
+            int year = Integer.parseInt(parts[1]);
+            List<Booking> group = entry.getValue();
+
+            long totalRevenue = group.stream()
+                    .filter(b -> BookingStatus.CONFIRMED.name().equalsIgnoreCase(b.getBookingStatus()) || PaymentStatus.PAID.name().equalsIgnoreCase(b.getPaymentStatus()))
+                    .mapToLong(Booking::getTotalAmount)
+                    .sum();
+
+            long totalBookings = group.size();
+
+            long cancelledBookings = group.stream()
+                    .filter(b -> BookingStatus.CANCELLED.name().equalsIgnoreCase(b.getBookingStatus()))
+                    .count();
+
+            double cancelRate = totalBookings > 0 ? (double) cancelledBookings * 100 / totalBookings : 0;
+
+            revenueStatistics.add(RevenueStatistic.builder()
+                    .month(month).year(year).totalRevenue(totalRevenue).build());
+
+            cancelRateStatistics.add(CancelRateStatistic.builder()
+                    .month(month).year(year).cancelRate(cancelRate).build());
+
+            bookingCountStatistics.add(BookingCountStatistic.builder()
+                    .month(month).year(year).totalBookings(totalBookings).build());
+        }
+
+        Long pendingBookings = bookings.stream()
+                .filter(b -> BookingStatus.PENDING.name().equalsIgnoreCase(b.getBookingStatus()))
+                .count();
+
+        Long confirmedBookings = bookings.stream()
+                .filter(b -> BookingStatus.CONFIRMED.name().equalsIgnoreCase(b.getBookingStatus()))
+                .count();
+
+        Long cancelledBookings = bookings.stream()
+                .filter(b -> BookingStatus.CANCELLED.name().equalsIgnoreCase(b.getBookingStatus()))
+                .count();
+
+        return BookingStatisticResponse.builder()
+                .revenueStatistics(revenueStatistics)
+                .cancelRateStatistics(cancelRateStatistics)
+                .bookingCountStatistics(bookingCountStatistics)
+                .pendingBookings(pendingBookings)
+                .confirmedBookings(confirmedBookings)
+                .cancelledBookings(cancelledBookings)
+                .build();
     }
 }

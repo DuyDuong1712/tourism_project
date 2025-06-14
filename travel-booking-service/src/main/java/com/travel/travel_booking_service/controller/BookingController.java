@@ -1,18 +1,13 @@
 package com.travel.travel_booking_service.controller;
 
-import com.travel.travel_booking_service.dto.request.BookingRequest;
-import com.travel.travel_booking_service.dto.request.UpdateBookinngStatusRequest;
-import com.travel.travel_booking_service.dto.response.BookingResponse;
-import com.travel.travel_booking_service.dto.response.CustomerViewBookingResponse;
-import jakarta.validation.Valid;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.travel.travel_booking_service.dto.request.TransportRequest;
+import com.travel.travel_booking_service.dto.request.BookingRequest;
+import com.travel.travel_booking_service.dto.request.UpdateBookinngStatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
-import com.travel.travel_booking_service.dto.response.TransportResponse;
+import com.travel.travel_booking_service.dto.response.CustomerViewBookingResponse;
 import com.travel.travel_booking_service.service.BookingService;
 
 import lombok.AccessLevel;
@@ -41,18 +36,25 @@ public class BookingController {
     public ResponseEntity<ApiResponse> updateBookingStatus(@RequestBody UpdateBookinngStatusRequest request) {
         try {
             // Ở đây bạn phải cập nhật trạng thái thanh toán của đơn hàng chứ KHÔNG phải tạo đơn hàng mới.
-            bookingService.updateBookingStatus(Long.parseLong(request.getBookingId()), request.getStatus(), request.getTransactionNo()); // ví dụ gọi service xử lý cập nhật
-            return ResponseEntity.ok(ApiResponse.builder().data("Cập nhật trạng thái thành công").build());
+            bookingService.updateBookingStatus(
+                    Long.parseLong(request.getBookingId()),
+                    request.getStatus(),
+                    request.getTransactionNo()); // ví dụ gọi service xử lý cập nhật
+            return ResponseEntity.ok(
+                    ApiResponse.builder().data("Cập nhật trạng thái thành công").build());
         } catch (Exception e) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(ApiResponse.builder().data("Cập nhật trạng thái thất bại").build());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.builder()
+                            .data("Cập nhật trạng thái thất bại")
+                            .build());
         }
     }
 
     @GetMapping("{bookingId}")
     public ResponseEntity<ApiResponse<CustomerViewBookingResponse>> getBooking(@PathVariable String bookingId) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<CustomerViewBookingResponse>builder().data(bookingService.getBookingById(Long.parseLong(bookingId))).build());
+                .body(ApiResponse.<CustomerViewBookingResponse>builder()
+                        .data(bookingService.getBookingById(Long.parseLong(bookingId)))
+                        .build());
     }
 }

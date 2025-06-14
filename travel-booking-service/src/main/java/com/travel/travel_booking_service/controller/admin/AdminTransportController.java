@@ -2,7 +2,6 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -12,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.request.TransportRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import com.travel.travel_booking_service.dto.response.TransportResponse;
 import com.travel.travel_booking_service.service.TransportService;
 
@@ -72,8 +72,6 @@ public class AdminTransportController {
     public ResponseEntity<ApiResponse<StatisticResponse>> getTransportStatistics() {
         StatisticResponse statistics = transportService.getTransportStatistics();
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<StatisticResponse>builder()
-                        .data(statistics)
-                        .build());
+                .body(ApiResponse.<StatisticResponse>builder().data(statistics).build());
     }
 }

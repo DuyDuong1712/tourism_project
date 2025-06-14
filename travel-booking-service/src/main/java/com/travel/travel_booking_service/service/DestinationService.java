@@ -2,11 +2,11 @@ package com.travel.travel_booking_service.service;
 
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.DestinationResponse;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 
 public interface DestinationService {
     // ADMIN

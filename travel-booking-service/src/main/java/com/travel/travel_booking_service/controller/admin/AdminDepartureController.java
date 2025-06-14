@@ -2,7 +2,6 @@ package com.travel.travel_booking_service.controller.admin;
 
 import java.util.List;
 
-import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -13,6 +12,7 @@ import com.travel.travel_booking_service.dto.request.DepartureRequest;
 import com.travel.travel_booking_service.dto.request.StatusRequest;
 import com.travel.travel_booking_service.dto.response.ApiResponse;
 import com.travel.travel_booking_service.dto.response.DepartureResponse;
+import com.travel.travel_booking_service.dto.response.StatisticResponse;
 import com.travel.travel_booking_service.service.DepartureService;
 
 import lombok.AccessLevel;
@@ -74,8 +74,6 @@ public class AdminDepartureController {
     public ResponseEntity<ApiResponse<StatisticResponse>> getDepartureStatistics() {
         StatisticResponse statistics = departureService.getDepartureStatistics();
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<StatisticResponse>builder()
-                        .data(statistics)
-                        .build());
+                .body(ApiResponse.<StatisticResponse>builder().data(statistics).build());
     }
 }

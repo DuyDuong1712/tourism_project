@@ -1,7 +1,6 @@
 package com.travel.travel_booking_service.service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -50,14 +49,15 @@ public interface TourService {
             String title);
 
     // Lấy tất cả tour  + detail của tour đó
-    List<TourDetailResponse> getAllToursWithDetails(Long destinationId,
-                                                    Long departureId,
-                                                    Long transportationId,
-                                                    Long categoryId,
-                                                    Boolean inActive,
-                                                    Boolean isFeatured,
-                                                    String title, String fromDate
-                                                    );
+    List<TourDetailResponse> getAllToursWithDetails(
+            Long destinationId,
+            Long departureId,
+            Long transportationId,
+            Long categoryId,
+            Boolean inActive,
+            Boolean isFeatured,
+            String title,
+            String fromDate);
 
     TourDetailViewResponse getTourDetailsViewByTourId(Long id);
 

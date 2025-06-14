@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.travel.travel_booking_service.enums.TourDetailStatus;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

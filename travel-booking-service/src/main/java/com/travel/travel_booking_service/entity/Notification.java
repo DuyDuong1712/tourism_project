@@ -24,9 +24,6 @@ public class Notification extends BaseEntity {
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
 
-
     @Column(name = "type", nullable = false)
     private String type;
-
-
 }

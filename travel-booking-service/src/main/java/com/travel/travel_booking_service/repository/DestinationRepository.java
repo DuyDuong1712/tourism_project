@@ -63,9 +63,7 @@ public interface DestinationRepository extends JpaRepository<Destination, Long> 
             nativeQuery = true)
     List<Object[]> findDescendants(Long id);
 
-
-
-    Long countByInActiveTrue ();
+    Long countByInActiveTrue();
 
     Long countByInActiveFalse();
 }

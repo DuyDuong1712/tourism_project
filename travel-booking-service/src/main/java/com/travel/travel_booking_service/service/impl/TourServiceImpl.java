@@ -13,7 +13,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.travel.travel_booking_service.enums.BookingStatus;
+import com.travel.travel_booking_service.enums.RefundStatus;
+import com.travel.travel_booking_service.service.UserService;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -21,6 +22,9 @@ import jakarta.persistence.criteria.Predicate;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -32,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.travel.travel_booking_service.dto.request.*;
 import com.travel.travel_booking_service.dto.response.*;
 import com.travel.travel_booking_service.entity.*;
+import com.travel.travel_booking_service.enums.BookingStatus;
 import com.travel.travel_booking_service.enums.ErrorCode;
 import com.travel.travel_booking_service.enums.TourDetailStatus;
 import com.travel.travel_booking_service.exception.AppException;
@@ -65,6 +70,7 @@ public class TourServiceImpl implements TourService {
     TourImageRepository tourImageRepository;
     TourMapper tourMapper;
     ObjectMapper objectMapper;
+    private final UserService userService;
 
     @Override
     @Transactional
@@ -624,13 +630,15 @@ public class TourServiceImpl implements TourService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TourDetailResponse> getAllToursWithDetails(Long destinationId,
-                                                           Long departureId,
-                                                           Long transportationId,
-                                                           Long categoryId,
-                                                           Boolean inActive,
-                                                           Boolean isFeatured,
-                                                           String title, String fromDate) {
+    public List<TourDetailResponse> getAllToursWithDetails(
+            Long destinationId,
+            Long departureId,
+            Long transportationId,
+            Long categoryId,
+            Boolean inActive,
+            Boolean isFeatured,
+            String title,
+            String fromDate) {
         List<Long> destinationIds = null;
         if (destinationId != null) {
             destinationIds = getAllDestinationIds(destinationId);
@@ -660,7 +668,9 @@ public class TourServiceImpl implements TourService {
 
             for (TourDetail tourDetail : tourDetails) {
                 // Lọc theo fromDate nếu có
-                if (parsedFromDate != null && (tourDetail.getDayStart() == null || !tourDetail.getDayStart().isAfter(parsedFromDate))) {
+                if (parsedFromDate != null
+                        && (tourDetail.getDayStart() == null
+                                || !tourDetail.getDayStart().isAfter(parsedFromDate))) {
                     continue;
                 }
 
@@ -1108,6 +1118,27 @@ public class TourServiceImpl implements TourService {
             bookingRepository.updateBookingStatusByTourDetailId(tourDetailId, BookingStatus.COMPLETED.name());
         } else if (TourDetailStatus.CANCELLED.name().equals(request.getStatus())) {
             bookingRepository.updateBookingStatusByTourDetailId(tourDetailId, BookingStatus.CANCELLED.name());
+            Booking booking = bookingRepository.findByTourDetail_Id(tourDetailId);
+            booking.setCancelledAt(LocalDateTime.now());
+
+            // Lấy người hủy (admin/staff hiện tại)
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String cancelledBy = null;
+            if (authentication != null && authentication.isAuthenticated()) {
+                Object principal = authentication.getPrincipal();
+                if (principal instanceof Jwt) {
+                    Jwt jwt = (Jwt) principal;
+                    cancelledBy =  jwt.getSubject(); // hoặc getEmail()
+                }
+            }
+
+            booking.setCancelledBy(cancelledBy);
+            booking.setCancellationReason("Tour không đủ số lượng đăng ký để khởi hành");
+            booking.setRefundStatus(RefundStatus.PENDING.name());
+            booking.setRefundPercent(100); // Hoàn tiền 100% nếu hủy tour
+            booking.setRefundAmount(booking.getTotalAmount()); // Hoàn tiền 100% nếu hủy tour
+
+            bookingRepository.save(booking);
         } else if (TourDetailStatus.IN_PROGRESS.name().equals(request.getStatus())) {
             bookingRepository.updateBookingStatusByTourDetailId(tourDetailId, BookingStatus.CONFIRMED.name());
         }
@@ -1118,11 +1149,21 @@ public class TourServiceImpl implements TourService {
         Long activeCount = tourRepository.countByInActiveTrue();
         Long inActiveCount = tourRepository.countByInActiveFalse();
 
-        return StatisticResponse.builder().active(activeCount).inactive(inActiveCount).build();
+        return StatisticResponse.builder()
+                .active(activeCount)
+                .inactive(inActiveCount)
+                .build();
     }
 
     @Override
-    public List<TourDetailResponse> getAllToursDetailExpiredSoon(Long destinationId, Long departureId, Long transportationId, Long categoryId, Boolean inActive, Boolean isFeatured, String title) {
+    public List<TourDetailResponse> getAllToursDetailExpiredSoon(
+            Long destinationId,
+            Long departureId,
+            Long transportationId,
+            Long categoryId,
+            Boolean inActive,
+            Boolean isFeatured,
+            String title) {
         List<Long> destinationIds = null;
         if (destinationId != null) {
             destinationIds = getAllDestinationIds(destinationId);
@@ -1141,8 +1182,9 @@ public class TourServiceImpl implements TourService {
             List<TourDetail> upcomingTourDetails = tour.getTourDetails().stream()
                     .filter(tourDetail -> {
                         LocalDateTime startDate = tourDetail.getDayStart();
-                        return startDate != null &&
-                                !startDate.isBefore(now) && // >= now
+                        return startDate != null
+                                && !startDate.isBefore(now)
+                                && // >= now
                                 !startDate.isAfter(upcoming); // <= now + 7
                     })
                     .collect(Collectors.toList());
@@ -1188,7 +1230,14 @@ public class TourServiceImpl implements TourService {
     }
 
     @Override
-    public List<TourDetailResponse> getAllToursDetailExpired(Long destinationId, Long departureId, Long transportationId, Long categoryId, Boolean inActive, Boolean isFeatured, String title) {
+    public List<TourDetailResponse> getAllToursDetailExpired(
+            Long destinationId,
+            Long departureId,
+            Long transportationId,
+            Long categoryId,
+            Boolean inActive,
+            Boolean isFeatured,
+            String title) {
         List<Long> destinationIds = null;
         if (destinationId != null) {
             destinationIds = getAllDestinationIds(destinationId);
@@ -1213,8 +1262,7 @@ public class TourServiceImpl implements TourService {
             if (expiredTourDetails.isEmpty()) continue;
 
             // Lấy danh sách ảnh tour
-            List<String> tourImageUrls = tourImageRepository.getByTour_Id(tour.getId())
-                    .stream()
+            List<String> tourImageUrls = tourImageRepository.getByTour_Id(tour.getId()).stream()
                     .map(TourImage::getCloudinaryUrl)
                     .collect(Collectors.toList());
 
