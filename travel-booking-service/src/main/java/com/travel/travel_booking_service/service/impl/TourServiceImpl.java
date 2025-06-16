@@ -1297,6 +1297,78 @@ public class TourServiceImpl implements TourService {
         return tourDetailResponses;
     }
 
+    @Override
+    public List<CustomerTourSearchResponse> getFeaturedTours() {
+    List<Tour> tours = tourRepository.findAllByIsFeaturedTrueAndInActiveTrue();
+        if (tours.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDate fromDate = LocalDate.now();
+
+
+        return tours.stream()
+                .map(tour -> {
+                    CustomerTourSearchResponse response = new CustomerTourSearchResponse();
+
+                    response.setId(tour.getId());
+                    response.setTitle(tour.getTitle());
+                    response.setDestination(tour.getDestination().getName());
+                    response.setTransportation(tour.getTransport().getName());
+                    response.setDeparture(tour.getDeparture().getName());
+                    response.setCategory(tour.getCategory().getName());
+
+                    // Lấy tất cả dayStart hợp lệ từ tourDetails
+                    List<String> dayStarts = tour.getTourDetails().stream()
+                            .filter(detail -> (fromDate == null
+                                    && !detail.getDayStart()
+                                    .toLocalDate()
+                                    .isBefore(LocalDate.now()))
+                                    || (fromDate != null
+                                    && !detail.getDayStart()
+                                    .toLocalDate()
+                                    .isBefore(fromDate)))
+                            .filter(detail -> Objects.equals(detail.getStatus(), TourDetailStatus.SCHEDULED.name()))
+                            .map(detail -> detail.getDayStart().toString())
+                            .collect(Collectors.toList());
+
+                    // Nếu không có tourDetails hợp lệ, loại bỏ tour
+                    if (dayStarts.isEmpty()) {
+                        return null;
+                    }
+
+                    // Lấy tourDetail đầu tiên để lấy giá và duration
+                    TourDetail firstValidDetail = tour.getTourDetails().stream()
+                            .filter(detail -> (fromDate == null
+                                    && !detail.getDayStart()
+                                    .toLocalDate()
+                                    .isBefore(LocalDate.now()))
+                                    || (fromDate != null
+                                    && !detail.getDayStart()
+                                    .toLocalDate()
+                                    .isBefore(fromDate)))
+                            .filter(detail -> Objects.equals(detail.getStatus(), TourDetailStatus.SCHEDULED.name()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (firstValidDetail != null) {
+                        response.setPrice(firstValidDetail.getAdultPrice());
+                        response.setDuration(Long.toString(ChronoUnit.DAYS.between(
+                                firstValidDetail.getDayStart(), firstValidDetail.getDayReturn())));
+                    }
+
+                    response.setDayStarts(dayStarts);
+
+                    // Ánh xạ thêm ảnh chính nếu có
+                    if (!tour.getTourImages().isEmpty()) {
+                        response.setTourImages(tour.getTourImages().get(0).getCloudinaryUrl());
+                    }
+                    return response;
+                })
+                .filter(Objects::nonNull) // Loại bỏ các response null
+                .collect(Collectors.toList());
+    }
+
     // Hàm giả định để lấy khoảng giá từ budgetId
     private Long getBudgetRangeMin(Integer budgetId) {
         // Thay bằng logic thực tế của bạn

@@ -13,6 +13,7 @@ import lombok.*;
 public class BookingResponse {
     private Long id;
     private Long tourId;
+    private String tourName;
     private Long tourDetailId;
     private Long customerId;
     private String fullName;

@@ -83,4 +83,13 @@ public class TourController {
                         .data(tourService.searchTours(keyword))
                         .build());
     }
+
+    //Lay ra danh sách tour nổi bật
+    @GetMapping("/featured")
+    public ResponseEntity<ApiResponse<List<CustomerTourSearchResponse>>> getFeaturedTours() {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<CustomerTourSearchResponse>>builder()
+                        .data(tourService.getFeaturedTours())
+                        .build());
+    }
 }

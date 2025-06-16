@@ -113,4 +113,6 @@ public interface TourService {
             Boolean inActive,
             Boolean isFeatured,
             String title);
+
+    List<CustomerTourSearchResponse> getFeaturedTours();
 }

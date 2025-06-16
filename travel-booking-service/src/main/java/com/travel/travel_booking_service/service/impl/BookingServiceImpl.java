@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.travel.travel_booking_service.dto.request.CancelBookingRequest;
 import com.travel.travel_booking_service.dto.response.*;
 import com.travel.travel_booking_service.entity.*;
 import com.travel.travel_booking_service.repository.*;
@@ -389,5 +390,15 @@ public class BookingServiceImpl implements BookingService {
                 .confirmedBookings(confirmedBookings)
                 .cancelledBookings(cancelledBookings)
                 .build();
+    }
+
+    @Override
+    public void cancelBooking(Long bookingId, CancelBookingRequest cancelBookingRequest) {
+        Booking booking = bookingRepository
+                .findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+
+
     }
 }

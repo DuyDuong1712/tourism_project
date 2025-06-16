@@ -43,4 +43,6 @@ public interface TourRepository extends JpaRepository<Tour, Long>, JpaSpecificat
     Long countByInActiveTrue();
 
     Long countByInActiveFalse();
+
+    List<Tour> findAllByIsFeaturedTrueAndInActiveTrue();
 }

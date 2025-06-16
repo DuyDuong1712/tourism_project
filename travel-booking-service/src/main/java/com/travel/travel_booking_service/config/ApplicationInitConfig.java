@@ -100,7 +100,9 @@ public class ApplicationInitConfig {
                 User user = User.builder()
                         .username("admin")
                         .password(passwordEncoder.encode("admin123456"))
-                        .fullname("Administrator")
+                        .email("duyduongtourism@gmail.com")
+                        .phone("0824783053")
+                        .fullname("Quản trị viên")
                         .role(adminRole)
                         .build();
 

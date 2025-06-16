@@ -373,6 +373,7 @@ public class UserServiceImpl implements UserService {
                 BookingResponse bookingResponse = BookingResponse.builder()
                         .id(booking.getId())
                         .tourDetailId(booking.getTourDetail().getId())
+                        .tourName(booking.getTourDetail().getTour().getTitle())
                         .customerId(booking.getCustomer().getId())
                         .fullName(booking.getFullName())
                         .email(booking.getEmail())

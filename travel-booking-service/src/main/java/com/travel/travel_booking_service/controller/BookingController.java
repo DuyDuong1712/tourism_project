@@ -1,5 +1,6 @@
 package com.travel.travel_booking_service.controller;
 
+import com.travel.travel_booking_service.dto.request.CancelBookingRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -56,5 +57,13 @@ public class BookingController {
                 .body(ApiResponse.<CustomerViewBookingResponse>builder()
                         .data(bookingService.getBookingById(Long.parseLong(bookingId)))
                         .build());
+    }
+
+
+    // Huy tour phia nguoi dung
+    @PatchMapping("/{bookingId}/cancel")
+    public ResponseEntity cancelBooking(@PathVariable Long bookingId, @RequestBody CancelBookingRequest cancelBookingRequest) {
+        bookingService.cancelBooking(bookingId, cancelBookingRequest);
+        return ResponseEntity.ok("Booking cancelled successfully");
     }
 }
