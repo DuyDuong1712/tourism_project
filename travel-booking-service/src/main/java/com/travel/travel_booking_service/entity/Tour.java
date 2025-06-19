@@ -73,6 +73,10 @@ public class Tour extends BaseEntity {
     @JsonManagedReference("tour-reviews")
     private List<Review> reviews = new ArrayList<>();
 
+    @OneToMany(mappedBy = "tour", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("favorites")
+    private List<Favorite> favorites = new ArrayList<>();
+
     @Override
     public String toString() {
         return "Tour{id=" + getId() + ", title=" + title + "}";

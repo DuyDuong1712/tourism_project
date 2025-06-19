@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.travel.travel_booking_service.entity.Destination;
@@ -66,4 +67,9 @@ public interface DestinationRepository extends JpaRepository<Destination, Long> 
     Long countByInActiveTrue();
 
     Long countByInActiveFalse();
+
+    List<Destination> findByNameContainingIgnoreCaseAndInActiveTrue(String name);
+
+    @Query("SELECT d FROM Destination d WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', :keyword, '%')) AND d.inActive = true")
+    List<Destination> searchByName(@Param("keyword") String keyword);
 }

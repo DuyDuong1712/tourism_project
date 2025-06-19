@@ -32,32 +32,6 @@ public class UserController {
                         .build());
     }
 
-    @GetMapping("{userId}/bookings")
-    public ResponseEntity<ApiResponse<List<BookingResponse>>> getBookings(@PathVariable("userId") Long userId) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.<List<BookingResponse>>builder()
-                        .data(userService.getBookingsByUserId(userId))
-                        .build());
-    }
-
-    //    @PatchMapping()
-    //    public ResponseEntity<ApiResponse<CustomerInfoResponse>> updateProfile(
-    //            @RequestParam(value = "fullName", required = false) String fullName,
-    //            @RequestParam(value = "address", required = false) String address,
-    //            @RequestParam(value = "phoneNumber", required = false) String phoneNumber,
-    //            @RequestParam(value = "date_of_birth", required = false) String date_of_birth,
-    //            @RequestParam(value = "gender", required = false) String gender,
-    //            @RequestParam(value = "id_card", required = false) String id_card,
-    //            @RequestParam(value = "passport", required = false) String passport,
-    //            @RequestParam(value = "country", required = false) String country
-    //            ) {
-    //        return ResponseEntity.status(HttpStatus.OK)
-    //                .body(ApiResponse.<CustomerInfoResponse>builder()
-    //                        .data(userService.updateProfile(fullName, address, phoneNumber,date_of_birth, gender,
-    // id_card, passport, country))
-    //                        .build());
-    //    }
-
     @PatchMapping()
     public ResponseEntity<ApiResponse<CustomerInfoResponse>> updateProfile(
             @RequestBody UpdateProfileRequest updateProfileRequest) {

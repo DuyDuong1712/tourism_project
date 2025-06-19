@@ -1,6 +1,7 @@
 package com.travel.travel_booking_service.controller;
 
 import com.travel.travel_booking_service.dto.request.CancelBookingRequest;
+import com.travel.travel_booking_service.dto.response.BookingResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,8 @@ import com.travel.travel_booking_service.service.BookingService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -59,6 +62,14 @@ public class BookingController {
                         .build());
     }
 
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<List<BookingResponse>>> getBookings(@PathVariable("userId") Long userId, @RequestParam(required = false) String status) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<BookingResponse>>builder()
+                        .data(bookingService.getBookingsByUserId(userId, status))
+                        .build());
+    }
 
     // Huy tour phia nguoi dung
     @PatchMapping("/{bookingId}/cancel")

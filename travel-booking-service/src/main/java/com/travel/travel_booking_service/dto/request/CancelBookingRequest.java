@@ -8,7 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CancelBookingRequest {
-    private Long penaltyAmount;
-    private Long refundAmount;
-    private String reason; // Optional reason for cancellation
+    private String cancelReason; // Optional reason for cancellation
 }

@@ -61,6 +61,10 @@ public enum ErrorCode {
     INVALID_SCHEDULE_DATA(3010, "lịch trình tour không hợp lệ", HttpStatus.BAD_REQUEST),
     INVALID_TOUR_DETAIL_DATA(3010, "chi tiết tour không hợp lệ", HttpStatus.BAD_REQUEST),
     NOT_ENOUGH_SLOTS(3010, "Không còn đủ chỗ", HttpStatus.BAD_REQUEST),
+    TOUR_ALREADY_FAVORITED(3011, "Tour này đã được thêm vào mục yêu thích", HttpStatus.BAD_REQUEST),
+    FAVORITE_NOT_FOUND(3011, "Không tìm được tour yêu thích", HttpStatus.BAD_REQUEST),
+    INVALID_TOUR_START_DATE(3011, "Ngày bắt đầu khong hợp lệ", HttpStatus.BAD_REQUEST),
+
 
     // Mã lỗi liên quan đến Booking
     BOOKING_NOT_FOUND(4000, "Không tìm thấy đơn đặt tour", HttpStatus.NOT_FOUND),

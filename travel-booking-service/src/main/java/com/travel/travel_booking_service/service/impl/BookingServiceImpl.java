@@ -2,6 +2,7 @@ package com.travel.travel_booking_service.service.impl;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,8 @@ import com.travel.travel_booking_service.dto.request.CancelBookingRequest;
 import com.travel.travel_booking_service.dto.response.*;
 import com.travel.travel_booking_service.entity.*;
 import com.travel.travel_booking_service.repository.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -393,12 +396,117 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public List<BookingResponse> getBookingsByUserId(Long id, String status) {
+        List<Booking> bookings;
+
+        if (status != null && !status.isBlank()) {
+            bookings = bookingRepository.findByCustomer_IdAndBookingStatus(id, status.toUpperCase());
+        } else {
+            bookings = bookingRepository.findByCustomer_Id(id);
+        }
+
+        List<BookingResponse> bookingResponses = new ArrayList<>();
+        if (bookings != null && !bookings.isEmpty()) {
+            for (Booking booking : bookings) {
+                BookingResponse bookingResponse = BookingResponse.builder()
+                        .id(booking.getId())
+                        .tourDetailId(booking.getTourDetail().getId())
+                        .tourName(booking.getTourDetail().getTour().getTitle())
+                        .customerId(booking.getCustomer().getId())
+                        .fullName(booking.getFullName())
+                        .email(booking.getEmail())
+                        .phoneNumber(booking.getPhoneNumber())
+                        .address(booking.getAddress())
+                        .adultCount(booking.getAdultCount())
+                        .childrenCount(booking.getChildrenCount())
+                        .childCount(booking.getChildCount())
+                        .babyCount(booking.getBabyCount())
+                        .totalPeople(booking.getTotalPeople())
+                        .singleRoomCount(booking.getSingleRoomCount())
+                        .subtotal(booking.getSubtotal())
+                        .discountAmount(booking.getDiscountAmount())
+                        .totalAmount(booking.getTotalAmount())
+                        .note(booking.getNote())
+                        .bookingStatus(booking.getBookingStatus())
+                        .paymentStatus(booking.getPaymentStatus())
+                        .confirmedAt(booking.getConfirmedAt())
+                        .cancelledAt(booking.getCancelledAt())
+                        .cancellationReason(booking.getCancellationReason())
+                        .cancelledBy(booking.getCancelledBy())
+                        .transactionId(booking.getTransactionId())
+                        .paymentDate(booking.getPaymentDate())
+                        .paymentDescription(booking.getPaymentDescription())
+                        .refundAmount(booking.getRefundAmount())
+                        .refundPercent(booking.getRefundPercent())
+                        .refundDate(booking.getRefundDate())
+                        .refundStatus(booking.getRefundStatus())
+                        .refundTransactionId(booking.getRefundTransactionId())
+                        .refundNote(booking.getRefundNote())
+                        .createdDate(booking.getCreatedDate())
+                        .modifiedDate(booking.getModifiedDate())
+                        .createdBy(booking.getCreatedBy())
+                        .modifiedBy(booking.getModifiedBy())
+                        .startDate(booking.getTourDetail().getDayStart())
+                        .returnDate(booking.getTourDetail().getDayReturn())
+                        .build();
+
+                bookingResponses.add(bookingResponse);
+            }
+        }
+        return bookingResponses;
+    }
+
+
+
+    @Override
     public void cancelBooking(Long bookingId, CancelBookingRequest cancelBookingRequest) {
         Booking booking = bookingRepository
                 .findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
 
+        // Lấy ngày hôm nay và ngày bắt đầu tour
+        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime startDate = booking.getTourDetail().getDayStart();
 
+        if (startDate == null) {
+            throw new AppException(ErrorCode.INVALID_TOUR_START_DATE);
+        }
+
+        long daysLeft = ChronoUnit.DAYS.between(today, startDate);
+        int refundPercent;
+        long totalAmount = booking.getTotalAmount() != null ? booking.getTotalAmount() : 0;
+        long refundAmount;
+
+        // Tính toán chính sách hủy
+        if (daysLeft < 7) {
+            refundPercent = 0;
+            refundAmount = 0;
+        } else if (daysLeft < 15) {
+            refundPercent = 60;
+            refundAmount = (long) (totalAmount * 0.6);
+        } else {
+            refundPercent = 80;
+            refundAmount = (long) (totalAmount * 0.8);
+        }
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        String username = authentication.getName();
+
+        // Cập nhật thông tin hủy đơn
+        booking.setBookingStatus(BookingStatus.CANCELLED.name());
+        booking.setCancelledAt(LocalDateTime.now());
+        booking.setCancellationReason(cancelBookingRequest.getCancelReason());
+        booking.setCancelledBy(username); // Ví dụ: "USER", "ADMIN"
+        booking.setRefundPercent(refundPercent);
+        booking.setRefundAmount(refundAmount);
+        booking.setRefundStatus(refundAmount > 0 ? "PENDING" : "NO_REFUND");
+        booking.setRefundDate(refundAmount > 0 ? LocalDateTime.now() : null);
+        booking.setRefundNote("Chính sách hủy tự động áp dụng theo số ngày trước ngày khởi hành.");
+
+        bookingRepository.save(booking);
     }
 }

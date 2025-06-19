@@ -30,6 +30,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DestinationServiceImpl implements DestinationService {
 
+
     DestinationRepository destinationRepository;
     DestinationMapper destinationMapper;
     UploadImageFile uploadImageFile;
@@ -179,32 +180,6 @@ public class DestinationServiceImpl implements DestinationService {
                 .collect(Collectors.toList());
     }
 
-    //    @Override
-    //    public List<DestinationResponse> getChildrenByParentId(Long id) {
-    //        // Kiểm tra xem parentId có hợp lệ không
-    //        if (id == null || !destinationRepository.existsById(id)) {
-    //            return Collections.emptyList(); // Trả về danh sách rỗng nếu parentId không hợp lệ
-    //        }
-    //
-    //        // Lấy danh sách destination con theo parentId
-    //        List<Destination> destinations = destinationRepository.findByParentId(id);
-    //
-    //        // Nếu có destination con, chuyển đổi sang DestinationResponse
-    //        if (!destinations.isEmpty()) {
-    //            return destinations.stream()
-    //                    .map(destinationMapper::toDestinationResponse)
-    //                    .collect(Collectors.toList());
-    //        }
-    //
-    //        // Nếu không có destination con, trả về chính destination tương ứng với parentId
-    //        Optional<Destination> parentDestination = destinationRepository.findById(id);
-    //        if (parentDestination.isPresent()) {
-    //            return List.of(destinationMapper.toDestinationResponse(parentDestination.get()));
-    //        }
-    //
-    //        // Trường hợp không tìm thấy parentDestination (dù đã kiểm tra existsById)
-    //        return Collections.emptyList();
-    //    }
 
     @Override
     public List<DestinationResponse> getChildrenByParentId(Long id) {
@@ -284,6 +259,16 @@ public class DestinationServiceImpl implements DestinationService {
                 .active(activeCount)
                 .inactive(inActiveCount)
                 .build();
+    }
+
+    @Override
+    public List<DestinationResponse> searchDestinations(String keyword) {
+        List<Destination> destinations = destinationRepository.searchByName(keyword);
+
+            return destinations.stream()
+                    .map(destinationMapper::toDestinationResponse)
+                    .collect(Collectors.toList());
+
     }
 
     @Override

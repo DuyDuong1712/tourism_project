@@ -365,61 +365,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<BookingResponse> getBookingsByUserId(Long id) {
-        List<Booking> bookings = bookingRepository.findByCustomer_Id(id);
-        List<BookingResponse> bookingResponses = new ArrayList<>();
-        if (bookings != null && !bookings.isEmpty()) {
-            for (Booking booking : bookings) {
-                BookingResponse bookingResponse = BookingResponse.builder()
-                        .id(booking.getId())
-                        .tourDetailId(booking.getTourDetail().getId())
-                        .tourName(booking.getTourDetail().getTour().getTitle())
-                        .customerId(booking.getCustomer().getId())
-                        .fullName(booking.getFullName())
-                        .email(booking.getEmail())
-                        .phoneNumber(booking.getPhoneNumber())
-                        .address(booking.getAddress())
-                        .adultCount(booking.getAdultCount())
-                        .childrenCount(booking.getChildrenCount())
-                        .childCount(booking.getChildCount())
-                        .babyCount(booking.getBabyCount())
-                        .totalPeople(booking.getTotalPeople())
-                        .singleRoomCount(booking.getSingleRoomCount())
-                        .subtotal(booking.getSubtotal())
-                        .discountAmount(booking.getDiscountAmount())
-                        .totalAmount(booking.getTotalAmount())
-                        .note(booking.getNote())
-                        .bookingStatus(booking.getBookingStatus())
-                        .paymentStatus(booking.getPaymentStatus())
-                        .confirmedAt(booking.getConfirmedAt())
-                        .cancelledAt(booking.getCancelledAt())
-                        .cancellationReason(booking.getCancellationReason())
-                        .cancelledBy(booking.getCancelledBy())
-                        .transactionId(booking.getTransactionId())
-                        .paymentDate(booking.getPaymentDate())
-                        .paymentDescription(booking.getPaymentDescription())
-                        .refundAmount(booking.getRefundAmount())
-                        .refundPercent(booking.getRefundPercent())
-                        .refundDate(booking.getRefundDate())
-                        .refundStatus(booking.getRefundStatus())
-                        .refundTransactionId(booking.getRefundTransactionId())
-                        .refundNote(booking.getRefundNote())
-                        .createdDate(booking.getCreatedDate())
-                        .modifiedDate(booking.getModifiedDate())
-                        .createdBy(booking.getCreatedBy())
-                        .modifiedBy(booking.getModifiedBy())
-                        .startDate(booking.getTourDetail().getDayStart())
-                        .returnDate(booking.getTourDetail().getDayReturn())
-                        .build();
-
-                bookingResponses.add(bookingResponse);
-            }
-        }
-        return bookingResponses;
-    }
-
-
-    @Override
     public List<UserResponse> searchUsers(String keyword) {
         return List.of();
     }

@@ -60,11 +60,11 @@ public class User extends BaseEntity {
     private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(
-            mappedBy = "user",
+            mappedBy = "customer",
             fetch = FetchType.LAZY,
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
+    private List<Favorite> favorites = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

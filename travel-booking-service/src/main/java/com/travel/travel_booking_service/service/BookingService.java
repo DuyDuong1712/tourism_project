@@ -22,4 +22,6 @@ public interface BookingService {
     BookingStatisticResponse getBookingStatistics();
 
     void cancelBooking(Long bookingId, CancelBookingRequest cancelBookingRequest);
+
+    List<BookingResponse> getBookingsByUserId(Long id, String status);
 }

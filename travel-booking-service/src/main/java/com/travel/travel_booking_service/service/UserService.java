@@ -58,6 +58,4 @@ public interface UserService {
     //                                        String country
     //                                       );
     CustomerInfoResponse updateProfile(UpdateProfileRequest updateProfileRequest);
-
-    List<BookingResponse> getBookingsByUserId(Long id);
 }

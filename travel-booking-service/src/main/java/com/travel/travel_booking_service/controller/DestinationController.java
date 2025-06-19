@@ -31,6 +31,15 @@ public class DestinationController {
                         .build());
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<DestinationResponse>>> searchDestinations(
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.<List<DestinationResponse>>builder()
+                        .data(destinationService.searchDestinations(keyword))
+                        .build());
+    }
+
     @GetMapping("/parent-list")
     public ResponseEntity<ApiResponse<List<DestinationResponse>>> getParentDestinations() {
         return ResponseEntity.status(HttpStatus.OK)

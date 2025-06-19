@@ -31,4 +31,6 @@ public interface DestinationService {
     List<DestinationResponse> getChildrenByParentId(Long id);
 
     StatisticResponse getDestinationStatistics();
+
+    List<DestinationResponse> searchDestinations(String keyword);
 }
